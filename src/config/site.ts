@@ -1,4 +1,5 @@
 export const siteConfig = {
-  name: "WS20",
-  description: "Next.js + Supabase + AssoConnect API.",
+  name: "One Day Event Planner",
+  description:
+    "Organisez votre événement associatif simplement : budget, bénévoles, achats, démarches et messages prêts à copier en 2 minutes.",
 };

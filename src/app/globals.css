@@ -1,18 +1,43 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: #ffffff;
-  --color-foreground: #0a0a0a;
-}
+  --color-background: #fdfbf7;
+  --color-foreground: #1f2233;
+  --color-card: #ffffff;
+  --color-card-foreground: #1f2233;
+  --color-muted: #f3eee6;
+  --color-muted-foreground: #6b6f80;
+  --color-border: #e9e3d8;
+  --color-input: #e9e3d8;
+  --color-ring: #ff5b5c;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-background: #0a0a0a;
-    --color-foreground: #ededed;
-  }
+  --color-primary: #ff5b5c;
+  --color-primary-foreground: #ffffff;
+  --color-primary-soft: #fff1f0;
+  --color-primary-dark: #e23b3d;
+
+  --color-accent: #2a2d4a;
+  --color-accent-foreground: #ffffff;
+  --color-accent-soft: #eef0fb;
+
+  --color-success: #10b981;
+  --color-success-soft: #ecfdf5;
+  --color-warning: #f59e0b;
+  --color-warning-soft: #fff7e6;
+  --color-danger: #ef4444;
+  --color-danger-soft: #fef2f2;
+
+  --color-chart-1: #ff5b5c;
+  --color-chart-2: #2a2d4a;
+  --color-chart-3: #f59e0b;
+  --color-chart-4: #10b981;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 body {
   background: var(--color-background);
   color: var(--color-foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
 }
