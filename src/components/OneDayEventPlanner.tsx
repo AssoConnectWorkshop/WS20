@@ -4,18 +4,33 @@ import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import {
   AlertTriangle,
+  Beer,
   CalendarDays,
+  Camera,
   CheckCircle2,
   Clipboard,
+  Coffee,
   Euro,
+  Gamepad2,
   Lightbulb,
+  Megaphone,
+  Mic,
+  Music2,
   PartyPopper,
+  Palette,
+  Presentation,
   Share2,
   ShoppingCart,
   SlidersHorizontal,
   Sparkles,
+  Sparkle,
+  Store,
+  Ticket,
+  UserCheck,
   Users,
+  UtensilsCrossed,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -60,6 +75,30 @@ type EventConfig = {
   admin: string[];
   tips: string[];
 };
+
+const ANIMATION_ICONS: Record<string, LucideIcon> = {
+  "Buvette softs": Coffee,
+  "Buvette alcool": Beer,
+  "Tombola": Ticket,
+  "Jeux enfants": Gamepad2,
+  "Stand maquillage": Palette,
+  "Sono et mini scène": Music2,
+  "Café accueil": Coffee,
+  "Emplacements exposants": Store,
+  "Animation micro": Mic,
+  "Repas": UtensilsCrossed,
+  "Animation musicale": Music2,
+  "Photobooth": Camera,
+  "Accueil visiteurs": UserCheck,
+  "Stands associations": Store,
+  "Micro annonces": Megaphone,
+  "Démonstrations": Presentation,
+  "Espace inscriptions": UserCheck,
+};
+
+function iconFor(label: string): LucideIcon {
+  return ANIMATION_ICONS[label] ?? Sparkle;
+}
 
 const TYPE_CONFIG: Record<EventType, EventConfig> = {
   Kermesse: {
@@ -294,6 +333,11 @@ function decodeShare(value: string): PlannerInput | null {
   }
 }
 
+const inputClass =
+  "w-full rounded-[12px] border border-[color:var(--color-border)] bg-white px-4 py-2.5 text-[color:var(--color-text-title)] transition focus:border-[color:var(--color-primary)] focus:outline-none focus:ring-4 focus:ring-[color:var(--color-primary-20)]";
+
+const labelClass = "block space-y-2 text-sm font-medium text-[color:var(--color-text-title)]";
+
 export default function OneDayEventPlanner() {
   const [step, setStep] = useState(0);
   const [input, setInput] = useState<PlannerInput>(DEFAULT_INPUT);
@@ -307,6 +351,7 @@ export default function OneDayEventPlanner() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const shared = params.get("plan");
+    const typeParam = params.get("type");
     if (shared) {
       const decoded = decodeShare(shared);
       if (decoded) {
@@ -315,7 +360,16 @@ export default function OneDayEventPlanner() {
         setAdjustedVolunteers(decoded.availableVolunteers);
         setIsGenerated(true);
         setStep(2);
+        return;
       }
+    }
+    if (typeParam && (typeParam as EventType) in TYPE_CONFIG) {
+      const t = typeParam as EventType;
+      setInput((cur) => ({
+        ...cur,
+        eventType: t,
+        selectedAnimations: TYPE_CONFIG[t].animations.slice(0, 3).map((a) => a.label),
+      }));
     }
   }, []);
 
@@ -393,8 +447,16 @@ export default function OneDayEventPlanner() {
     }));
   }
 
-  function updateAnimations(values: string[]) {
-    setInput((current) => ({ ...current, selectedAnimations: values }));
+  function toggleAnimation(label: string) {
+    setInput((current) => {
+      const exists = current.selectedAnimations.includes(label);
+      return {
+        ...current,
+        selectedAnimations: exists
+          ? current.selectedAnimations.filter((a) => a !== label)
+          : [...current.selectedAnimations, label],
+      };
+    });
   }
 
   async function copyShareLink() {
@@ -412,22 +474,19 @@ export default function OneDayEventPlanner() {
   const steps = ["Événement", "Budget", "Plan généré"];
 
   return (
-    <main className="min-h-screen bg-[color:var(--color-background)] px-4 py-8">
-      <section className="mx-auto max-w-5xl space-y-6">
+    <main className="bg-transparent px-4 py-10">
+      <section className="mx-auto max-w-[1280px] space-y-6 px-2">
         <div className="relative overflow-hidden rounded-3xl border border-[color:var(--color-border)] bg-white p-6 shadow-sm">
-          <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[color:var(--color-primary-soft)]" aria-hidden />
-          <div className="absolute right-4 top-4 hidden rounded-full bg-[color:var(--color-accent)] px-3 py-1.5 text-xs font-medium text-white sm:block">
-            MVP hackathon · démo 4 minutes
-          </div>
+          <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-[color:var(--color-bg-blue)]" aria-hidden />
           <div className="relative max-w-3xl space-y-3">
-            <div className="inline-flex items-center gap-2 rounded-full bg-[color:var(--color-primary-soft)] px-3 py-1 text-sm font-medium text-[color:var(--color-primary-dark)]">
-              <PartyPopper className="h-4 w-4" /> One Day Event Planner
+            <div className="inline-flex items-center gap-2 rounded-full bg-[color:var(--color-bg-blue)] px-3 py-1 text-sm font-medium text-[color:var(--color-primary)]">
+              <PartyPopper className="h-4 w-4" /> Wizard de planification
             </div>
-            <h1 className="text-3xl font-bold tracking-tight text-[color:var(--color-accent)] sm:text-4xl">
-              Organisez votre événement associatif, simplement et sans stress
+            <h1 className="font-heading text-[2rem] font-bold tracking-tight text-[color:var(--color-text-title)] sm:text-[2.4rem]">
+              Décrivez votre événement, on s&apos;occupe du <span className="highlight">reste</span>
             </h1>
-            <p className="text-[color:var(--color-muted-foreground)]">
-              Quelques informations suffisent pour obtenir un plan clair : budget facile à lire, bénévoles nécessaires, achats à prévoir, démarches à vérifier et prochaines priorités.
+            <p className="text-[color:var(--color-text-subtitle)]">
+              Deux étapes, un dashboard complet : budget facile à lire, bénévoles nécessaires, achats à prévoir, démarches à vérifier, prochaines priorités.
             </p>
           </div>
         </div>
@@ -441,7 +500,7 @@ export default function OneDayEventPlanner() {
                 key={label}
                 type="button"
                 onClick={() => clickable ? setStep(index) : undefined}
-                className={`rounded-full border px-4 py-2 text-sm font-medium transition ${active ? "border-[color:var(--color-primary)] bg-[color:var(--color-primary)] text-white" : "border-[color:var(--color-border)] bg-white text-[color:var(--color-muted-foreground)] hover:bg-[color:var(--color-muted)]"}`}
+                className={`rounded-[50px] border px-4 py-2 text-sm font-medium transition ${active ? "border-[color:var(--color-primary)] bg-[color:var(--color-primary)] text-white shadow-sm" : "border-[color:var(--color-border)] bg-white text-[color:var(--color-text-subtitle)] hover:border-[color:var(--color-primary)] hover:text-[color:var(--color-primary)]"}`}
               >
                 {index + 1}. {label}
               </button>
@@ -460,43 +519,43 @@ export default function OneDayEventPlanner() {
               className="grid gap-4"
               style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}
             >
-              <div className="space-y-4 rounded-2xl border border-[color:var(--color-border)] bg-white p-5 shadow-sm">
-                <h2 className="text-xl font-semibold text-[color:var(--color-accent)]">1. Décrivez l&apos;événement</h2>
-                <label className="block space-y-2 text-sm font-medium">
+              <div className="space-y-4 rounded-2xl border border-[color:var(--color-border)] bg-white p-6 shadow-sm">
+                <h2 className="font-heading text-xl font-semibold text-[color:var(--color-text-title)]">1. Décrivez l&apos;événement</h2>
+                <label className={labelClass}>
                   <span>Nom de l&apos;événement</span>
-                  <input className="w-full rounded-xl border border-[color:var(--color-border)] bg-white px-3 py-2 focus:border-[color:var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--color-primary-soft)]" value={input.eventName} onChange={(event) => updateInput("eventName", event.target.value)} />
+                  <input className={inputClass} value={input.eventName} onChange={(event) => updateInput("eventName", event.target.value)} />
                 </label>
-                <label className="block space-y-2 text-sm font-medium">
+                <label className={labelClass}>
                   <span>Type</span>
-                  <select className="w-full rounded-xl border border-[color:var(--color-border)] bg-white px-3 py-2 focus:border-[color:var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--color-primary-soft)]" value={input.eventType} onChange={(event) => changeEventType(event.target.value as EventType)}>
+                  <select className={inputClass} value={input.eventType} onChange={(event) => changeEventType(event.target.value as EventType)}>
                     {Object.keys(TYPE_CONFIG).map((type) => <option key={type}>{type}</option>)}
                   </select>
                 </label>
-                <label className="block space-y-2 text-sm font-medium">
+                <label className={labelClass}>
                   <span>Date exacte</span>
-                  <input type="date" className="w-full rounded-xl border border-[color:var(--color-border)] bg-white px-3 py-2 focus:border-[color:var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--color-primary-soft)]" value={input.date} onChange={(event) => updateInput("date", event.target.value)} />
+                  <input type="date" className={inputClass} value={input.date} onChange={(event) => updateInput("date", event.target.value)} />
                 </label>
                 <Button className="w-full" onClick={() => setStep(1)}>Continuer vers le budget</Button>
               </div>
 
-              <div className="relative min-h-96 overflow-hidden rounded-2xl border border-[color:var(--color-border)] bg-white p-5 shadow-sm">
+              <div className="relative min-h-96 overflow-hidden rounded-2xl border border-[color:var(--color-border)] bg-white p-6 shadow-sm">
                 <div className={`${isGenerated ? "blur-none" : "blur-sm"} space-y-4 transition`}>
-                  <div className="rounded-xl border border-[color:var(--color-primary-soft)] bg-[color:var(--color-primary-soft)] p-4">
-                    <p className="text-sm font-medium text-[color:var(--color-primary-dark)]">Aperçu du plan</p>
-                    <p className="mt-2 text-2xl font-semibold text-[color:var(--color-accent)]">Budget, achats, priorités et messages</p>
+                  <div className="rounded-2xl border border-[color:var(--color-bg-blue)] bg-[color:var(--color-bg-blue)] p-4">
+                    <p className="text-sm font-medium text-[color:var(--color-primary)]">Aperçu du plan</p>
+                    <p className="mt-2 font-heading text-xl font-semibold text-[color:var(--color-text-title)]">Budget, achats, priorités et messages</p>
                   </div>
                   {["Participants minimum sans perte", "Liste de courses estimée", "Tips par type d'événement", "Messages prêts à copier"].map((item) => (
-                    <div key={item} className="flex items-center gap-3 rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-background)] p-3">
-                      <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-                      <span className="font-medium">{item}</span>
+                    <div key={item} className="flex items-center gap-3 rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-strip)] p-3">
+                      <CheckCircle2 className="h-5 w-5 text-[color:var(--color-primary)]" />
+                      <span className="font-medium text-[color:var(--color-text-title)]">{item}</span>
                     </div>
                   ))}
                 </div>
                 {!isGenerated && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-white/40 p-6 text-center">
-                    <div className="rounded-2xl border border-[color:var(--color-border)] bg-white p-5 shadow-md">
-                      <p className="text-lg font-semibold text-[color:var(--color-accent)]">Votre plan est presque prêt</p>
-                      <p className="mt-1 text-sm text-[color:var(--color-muted-foreground)]">Complétez le wizard pour révéler le dashboard.</p>
+                  <div className="absolute inset-0 flex items-center justify-center bg-white/50 p-6 text-center backdrop-blur-[1px]">
+                    <div className="rounded-2xl border border-[color:var(--color-border)] bg-white p-5 shadow-[0_10px_50px_0_rgba(49,107,242,0.2)]">
+                      <p className="font-heading text-lg font-semibold text-[color:var(--color-text-title)]">Votre plan est presque prêt</p>
+                      <p className="mt-1 text-sm text-[color:var(--color-text-subtitle)]">Complétez le wizard pour révéler le dashboard.</p>
                     </div>
                   </div>
                 )}
@@ -512,84 +571,144 @@ export default function OneDayEventPlanner() {
               exit={{ opacity: 0, y: -14 }}
               transition={{ duration: 0.35 }}
               className="grid gap-4"
-              style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}
+              style={{ gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))" }}
             >
-              <div className="space-y-4 rounded-2xl border border-[color:var(--color-border)] bg-white p-5 shadow-sm">
-                <h2 className="text-xl font-semibold text-[color:var(--color-accent)]">2. Budget et ressources</h2>
-                <label className="block space-y-2 text-sm font-medium">
+              <div className="space-y-5 rounded-2xl border border-[color:var(--color-border)] bg-white p-6 shadow-sm">
+                <h2 className="font-heading text-xl font-semibold text-[color:var(--color-text-title)]">2. Budget et ressources</h2>
+                <label className={labelClass}>
                   <span>Budget de départ</span>
                   <div className="relative">
-                    <input type="number" className="w-full rounded-xl border border-[color:var(--color-border)] bg-white px-3 py-2 pr-10 focus:border-[color:var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--color-primary-soft)]" value={input.startingBudget} onChange={(event) => updateInput("startingBudget", Number(event.target.value))} />
-                    <span className="absolute right-3 top-2.5 text-[color:var(--color-muted-foreground)]">€</span>
+                    <input type="number" className={`${inputClass} pr-10`} value={input.startingBudget} onChange={(event) => updateInput("startingBudget", Number(event.target.value))} />
+                    <span className="absolute right-3 top-3 text-[color:var(--color-text-muted)]">€</span>
                   </div>
                 </label>
-                <label className="block space-y-2 text-sm font-medium">
+                <label className={labelClass}>
                   <span>Participants espérés</span>
-                  <input type="number" className="w-full rounded-xl border border-[color:var(--color-border)] bg-white px-3 py-2 focus:border-[color:var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--color-primary-soft)]" value={input.expectedParticipants} onChange={(event) => updateInput("expectedParticipants", Number(event.target.value))} />
+                  <input type="number" className={inputClass} value={input.expectedParticipants} onChange={(event) => updateInput("expectedParticipants", Number(event.target.value))} />
                 </label>
-                <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))" }}>
-                  <button type="button" onClick={() => updateInput("isFree", true)} className={`rounded-xl border p-3 text-left text-sm font-medium ${input.isFree ? "border-[color:var(--color-primary)] bg-[color:var(--color-primary-soft)] text-[color:var(--color-primary-dark)]" : "border-[color:var(--color-border)] bg-white text-[color:var(--color-muted-foreground)]"}`}>Entrée gratuite</button>
-                  <button type="button" onClick={() => updateInput("isFree", false)} className={`rounded-xl border p-3 text-left text-sm font-medium ${!input.isFree ? "border-[color:var(--color-primary)] bg-[color:var(--color-primary-soft)] text-[color:var(--color-primary-dark)]" : "border-[color:var(--color-border)] bg-white text-[color:var(--color-muted-foreground)]"}`}>Entrée payante</button>
+                <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))" }}>
+                  <button type="button" onClick={() => updateInput("isFree", true)} className={`rounded-[50px] border px-4 py-2.5 text-center text-sm font-medium transition ${input.isFree ? "border-[color:var(--color-primary)] bg-[color:var(--color-primary)] text-white" : "border-[color:var(--color-border)] bg-white text-[color:var(--color-text-subtitle)]"}`}>Entrée gratuite</button>
+                  <button type="button" onClick={() => updateInput("isFree", false)} className={`rounded-[50px] border px-4 py-2.5 text-center text-sm font-medium transition ${!input.isFree ? "border-[color:var(--color-primary)] bg-[color:var(--color-primary)] text-white" : "border-[color:var(--color-border)] bg-white text-[color:var(--color-text-subtitle)]"}`}>Entrée payante</button>
                 </div>
                 {!input.isFree && (
-                  <label className="block space-y-2 text-sm font-medium">
+                  <label className={labelClass}>
                     <span>Prix d&apos;entrée moyen</span>
                     <div className="relative">
-                      <input type="number" className="w-full rounded-xl border border-[color:var(--color-border)] bg-white px-3 py-2 pr-10 focus:border-[color:var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--color-primary-soft)]" value={input.ticketPrice} onChange={(event) => updateInput("ticketPrice", Number(event.target.value))} />
-                      <span className="absolute right-3 top-2.5 text-[color:var(--color-muted-foreground)]">€</span>
+                      <input type="number" className={`${inputClass} pr-10`} value={input.ticketPrice} onChange={(event) => updateInput("ticketPrice", Number(event.target.value))} />
+                      <span className="absolute right-3 top-3 text-[color:var(--color-text-muted)]">€</span>
                     </div>
                   </label>
                 )}
-                <label className="block space-y-2 text-sm font-medium">
+                <label className={labelClass}>
                   <span>Bénévoles disponibles</span>
-                  <input type="number" className="w-full rounded-xl border border-[color:var(--color-border)] bg-white px-3 py-2 focus:border-[color:var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--color-primary-soft)]" value={input.availableVolunteers} onChange={(event) => updateInput("availableVolunteers", Number(event.target.value))} />
+                  <input type="number" className={inputClass} value={input.availableVolunteers} onChange={(event) => updateInput("availableVolunteers", Number(event.target.value))} />
                 </label>
-                <button type="button" onClick={() => updateInput("hasSponsors", !input.hasSponsors)} className={`w-full rounded-xl border px-3 py-2 text-sm font-medium ${input.hasSponsors ? "border-[color:var(--color-primary)] bg-[color:var(--color-primary-soft)] text-[color:var(--color-primary-dark)]" : "border-[color:var(--color-border)] bg-white text-[color:var(--color-muted-foreground)]"}`}>
-                  Sponsors ou subvention prévue
+                <button
+                  type="button"
+                  onClick={() => updateInput("hasSponsors", !input.hasSponsors)}
+                  className={`flex w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left text-sm font-medium transition ${input.hasSponsors ? "border-[color:var(--color-primary)] bg-[color:var(--color-bg-blue)] text-[color:var(--color-primary)]" : "border-[color:var(--color-border)] bg-white text-[color:var(--color-text-subtitle)]"}`}
+                >
+                  <span>Sponsors ou subvention prévue</span>
+                  <span className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition ${input.hasSponsors ? "bg-[color:var(--color-primary)]" : "bg-[color:var(--color-border)]"}`}>
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${input.hasSponsors ? "translate-x-6" : "translate-x-1"}`} />
+                  </span>
                 </button>
 
-                <div className="space-y-3 rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-background)] p-3">
-                  <div className="flex items-center gap-2 font-semibold text-[color:var(--color-accent)]"><Sparkles className="h-4 w-4 text-[color:var(--color-primary)]" /> Animations prévues</div>
-                  <p className="text-sm text-[color:var(--color-muted-foreground)]">Trois animations sont pré-sélectionnées. Désélectionnez ou ajoutez-en avec Cmd/Ctrl + clic.</p>
-                  <select
-                    multiple
-                    className="h-40 w-full rounded-lg border border-[color:var(--color-border)] bg-white px-3 py-2 text-sm focus:border-[color:var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--color-primary-soft)]"
-                    value={input.selectedAnimations}
-                    onChange={(event) => updateAnimations(Array.from(event.target.selectedOptions).map((option) => option.value))}
-                  >
-                    {config.animations.map((animation) => <option key={animation.label} value={animation.label}>{animation.label}</option>)}
-                  </select>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => setStep(0)}>Retour</Button>
+                <div className="flex gap-2 pt-2">
+                  <Button variant="secondary" onClick={() => setStep(0)}>Retour</Button>
                   <Button className="flex-1" onClick={() => { setIsGenerated(true); setStep(2); }}>Générer mon plan</Button>
                 </div>
               </div>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-[color:var(--color-accent)]"><Euro className="h-5 w-5 text-[color:var(--color-primary)]" /> Estimation instantanée</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className={`rounded-xl border p-4 ${statusClasses(plan.budgetStatus)}`}>
-                    <p className="text-sm font-medium">Argent restant estimé</p>
-                    <p className="text-3xl font-bold">{formatEuro(plan.net)}</p>
+              <div className="space-y-4">
+                <div className="rounded-2xl border border-[color:var(--color-border)] bg-white p-6 shadow-sm">
+                  <div className="mb-4 flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-[color:var(--color-primary)]" />
+                    <h3 className="font-heading text-lg font-semibold text-[color:var(--color-text-title)]">Animations prévues</h3>
                   </div>
-                  <p className="text-sm text-[color:var(--color-muted-foreground)]">Il faut environ {plan.minimumParticipants} participants pour ne pas perdre d&apos;argent. Vous pourrez ajuster ce nombre après génération.</p>
-                  <div className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-background)] p-3 text-sm">
-                    <p className="font-semibold text-[color:var(--color-accent)]">Coût et revenu estimés par animation</p>
-                    <div className="mt-2 space-y-2">
-                      {animationRows.map((row) => (
-                        <div key={row.label} className="flex items-center justify-between gap-2 border-t border-[color:var(--color-border)] pt-2 first:border-t-0 first:pt-0">
-                          <span>{row.label}</span>
-                          <span className="text-right text-[color:var(--color-muted-foreground)]">{formatEuro(row.cost)} dép. | {formatEuro(row.revenue)} rec.</span>
-                        </div>
-                      ))}
+                  <p className="text-sm text-[color:var(--color-text-subtitle)]">
+                    Cliquez sur une carte pour l&apos;activer ou la désactiver. Chaque animation affiche son revenu et son coût estimés par participant.
+                  </p>
+                  <div className="mt-4 grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))" }}>
+                    {config.animations.map((animation) => {
+                      const selected = input.selectedAnimations.includes(animation.label);
+                      const Icon = iconFor(animation.label);
+                      return (
+                        <button
+                          key={animation.label}
+                          type="button"
+                          onClick={() => toggleAnimation(animation.label)}
+                          aria-pressed={selected}
+                          className={`flex h-full flex-col items-start gap-2 rounded-2xl border p-4 text-left transition ${selected ? "border-[color:var(--color-primary)] bg-[color:var(--color-bg-blue)] shadow-[0_10px_30px_0_rgba(49,107,242,0.15)]" : "border-[color:var(--color-border)] bg-white hover:border-[color:var(--color-primary)] hover:bg-[color:var(--color-bg-strip)]"}`}
+                        >
+                          <div className="flex w-full items-start justify-between gap-2">
+                            <span className={`flex h-10 w-10 items-center justify-center rounded-full ${selected ? "bg-[color:var(--color-primary)] text-white" : "bg-[color:var(--color-bg-blue)] text-[color:var(--color-primary)]"}`}>
+                              <Icon className="h-5 w-5" />
+                            </span>
+                            <span
+                              className={`flex h-6 w-6 items-center justify-center rounded-full border-2 transition ${
+                                selected
+                                  ? "border-[color:var(--color-primary)] bg-[color:var(--color-primary)] text-white"
+                                  : "border-[color:var(--color-border)] bg-white text-transparent"
+                              }`}
+                              aria-hidden
+                            >
+                              <CheckCircle2 className="h-4 w-4" />
+                            </span>
+                          </div>
+                          <p className="font-heading text-base font-semibold text-[color:var(--color-text-title)]">{animation.label}</p>
+                          <div className="mt-auto flex w-full flex-wrap items-center gap-1.5 text-xs">
+                            <span className="rounded-full bg-emerald-50 px-2 py-0.5 font-semibold text-emerald-700">
+                              +{formatEuro(animation.revenuePerParticipant)}/pers.
+                            </span>
+                            <span className="rounded-full bg-[color:var(--color-bg-grey)] px-2 py-0.5 font-semibold text-[color:var(--color-text-muted)]">
+                              −{formatEuro(animation.fixedCost)} fixe
+                            </span>
+                            {animation.label.toLowerCase().includes("alcool") && (
+                              <span className="rounded-full bg-amber-50 px-2 py-0.5 font-semibold text-amber-700">
+                                Buvette
+                              </span>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="mt-3 text-xs text-[color:var(--color-text-muted)]">
+                    {input.selectedAnimations.length} animation{input.selectedAnimations.length > 1 ? "s" : ""} sélectionnée{input.selectedAnimations.length > 1 ? "s" : ""}
+                  </p>
+                </div>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 font-heading text-[color:var(--color-text-title)]">
+                      <Euro className="h-5 w-5 text-[color:var(--color-primary)]" /> Estimation instantanée
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className={`rounded-2xl border p-4 ${statusClasses(plan.budgetStatus)}`}>
+                      <p className="text-sm font-medium">Argent restant estimé</p>
+                      <p className="font-heading text-3xl font-bold">{formatEuro(plan.net)}</p>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                    <p className="text-sm text-[color:var(--color-text-subtitle)]">
+                      Il faut environ <strong>{plan.minimumParticipants} participants</strong> pour ne pas perdre d&apos;argent. Vous pourrez ajuster ce nombre après génération.
+                    </p>
+                    {animationRows.length > 0 && (
+                      <div className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-strip)] p-3 text-sm">
+                        <p className="font-heading font-semibold text-[color:var(--color-text-title)]">Coût et revenu par animation</p>
+                        <div className="mt-2 space-y-2">
+                          {animationRows.map((row) => (
+                            <div key={row.label} className="flex items-center justify-between gap-2 border-t border-[color:var(--color-border)] pt-2 first:border-t-0 first:pt-0">
+                              <span>{row.label}</span>
+                              <span className="text-right text-[color:var(--color-text-muted)]">{formatEuro(row.cost)} dép. | {formatEuro(row.revenue)} rec.</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
             </motion.section>
           )}
 
@@ -606,40 +725,49 @@ export default function OneDayEventPlanner() {
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="space-y-2">
                     <div className={`inline-flex rounded-full border px-3 py-1 text-sm font-semibold ${statusClasses(plan.globalStatus)}`}>{statusLabel(plan.globalStatus)}</div>
-                    <h2 className="text-3xl font-bold text-[color:var(--color-accent)]">{input.eventName}</h2>
-                    <div className="flex flex-wrap gap-3 text-sm text-[color:var(--color-muted-foreground)]">
+                    <h2 className="font-heading text-[2rem] font-bold text-[color:var(--color-text-title)]">{input.eventName}</h2>
+                    <div className="flex flex-wrap gap-3 text-sm text-[color:var(--color-text-subtitle)]">
                       <span className="flex items-center gap-1"><CalendarDays className="h-4 w-4" /> {formatDate(input.date)}</span>
                       <span className="flex items-center gap-1"><Users className="h-4 w-4" /> {plan.participants} participants</span>
                       <span className="flex items-center gap-1"><Sparkles className="h-4 w-4" /> {input.selectedAnimations.length} animations</span>
                     </div>
                   </div>
-                  <Button variant="outline" onClick={copyShareLink} className="gap-2">
+                  <Button variant="secondary" onClick={copyShareLink}>
                     {copied ? <Clipboard className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
                     {copied ? "Lien copié" : "Copier le lien partageable"}
                   </Button>
                 </div>
               </div>
 
-              <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))" }}>
+              <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
                 <Card>
-                  <CardHeader><CardTitle className="text-sm font-medium text-[color:var(--color-muted-foreground)]">Argent restant estimé</CardTitle></CardHeader>
-                  <CardContent><p className={`text-4xl font-bold ${plan.net >= 0 ? "text-emerald-700" : "text-red-700"}`}>{formatEuro(plan.net)}</p><p className="mt-2 text-sm text-[color:var(--color-muted-foreground)]">Budget de départ inclus</p></CardContent>
+                  <CardHeader><CardTitle className="text-sm font-medium text-[color:var(--color-text-muted)]">Argent restant estimé</CardTitle></CardHeader>
+                  <CardContent>
+                    <p className={`font-heading text-4xl font-bold ${plan.net >= 0 ? "text-emerald-700" : "text-red-700"}`}>{formatEuro(plan.net)}</p>
+                    <p className="mt-2 text-sm text-[color:var(--color-text-muted)]">Budget de départ inclus</p>
+                  </CardContent>
                 </Card>
                 <Card>
-                  <CardHeader><CardTitle className="text-sm font-medium text-[color:var(--color-muted-foreground)]">Participants minimum sans perte</CardTitle></CardHeader>
-                  <CardContent><p className="text-4xl font-bold text-[color:var(--color-primary)]">{plan.minimumParticipants}</p><p className="mt-2 text-sm text-[color:var(--color-muted-foreground)]">objectif pour finir à 0 € ou plus</p></CardContent>
+                  <CardHeader><CardTitle className="text-sm font-medium text-[color:var(--color-text-muted)]">Participants minimum sans perte</CardTitle></CardHeader>
+                  <CardContent>
+                    <p className="font-heading text-4xl font-bold text-[color:var(--color-primary)]">{plan.minimumParticipants}</p>
+                    <p className="mt-2 text-sm text-[color:var(--color-text-muted)]">objectif pour finir à 0 € ou plus</p>
+                  </CardContent>
                 </Card>
                 <Card>
-                  <CardHeader><CardTitle className="text-sm font-medium text-[color:var(--color-muted-foreground)]">Bénévoles</CardTitle></CardHeader>
-                  <CardContent><p className={`text-4xl font-bold ${plan.volunteerStatus === "red" ? "text-red-700" : "text-emerald-700"}`}>{adjustedVolunteers}/{plan.recommendedVolunteers}</p><p className="mt-2 text-sm text-[color:var(--color-muted-foreground)]">disponibles vs recommandés</p></CardContent>
+                  <CardHeader><CardTitle className="text-sm font-medium text-[color:var(--color-text-muted)]">Bénévoles</CardTitle></CardHeader>
+                  <CardContent>
+                    <p className={`font-heading text-4xl font-bold ${plan.volunteerStatus === "red" ? "text-red-700" : "text-emerald-700"}`}>{adjustedVolunteers}/{plan.recommendedVolunteers}</p>
+                    <p className="mt-2 text-sm text-[color:var(--color-text-muted)]">disponibles vs recommandés</p>
+                  </CardContent>
                 </Card>
               </div>
 
               <Card>
-                <CardHeader><CardTitle className="flex items-center gap-2 text-[color:var(--color-accent)]"><Lightbulb className="h-5 w-5 text-[color:var(--color-primary)]" /> Les 3 priorités de cette semaine</CardTitle></CardHeader>
+                <CardHeader><CardTitle className="flex items-center gap-2 font-heading text-[color:var(--color-text-title)]"><Lightbulb className="h-5 w-5 text-[color:var(--color-primary)]" /> Les 3 priorités de cette semaine</CardTitle></CardHeader>
                 <CardContent className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
                   {priorities.map((priority) => (
-                    <div key={priority} className="rounded-xl border border-[color:var(--color-primary-soft)] bg-[color:var(--color-primary-soft)] p-3 text-sm font-medium text-[color:var(--color-primary-dark)]">{priority}</div>
+                    <div key={priority} className="rounded-2xl border border-[color:var(--color-bg-blue)] bg-[color:var(--color-bg-blue)] p-3 text-sm font-medium text-[color:var(--color-text-title)]">{priority}</div>
                   ))}
                 </CardContent>
               </Card>
@@ -649,7 +777,7 @@ export default function OneDayEventPlanner() {
                   <div className="flex items-start gap-3">
                     <AlertTriangle className="mt-0.5 h-5 w-5" />
                     <div>
-                      <p className="font-semibold">Autorisation buvette temporaire à vérifier</p>
+                      <p className="font-heading font-semibold">Autorisation buvette temporaire à vérifier</p>
                       <p className="mt-1 text-sm">Si vous servez de l&apos;alcool, pensez à demander l&apos;autorisation en mairie et à vérifier les règles applicables à votre événement.</p>
                     </div>
                   </div>
@@ -658,41 +786,41 @@ export default function OneDayEventPlanner() {
 
               <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
                 <div className="rounded-2xl border border-[color:var(--color-border)] bg-white p-5 shadow-sm">
-                  <div className="mb-4 flex items-center gap-2 text-lg font-semibold text-[color:var(--color-accent)]"><SlidersHorizontal className="h-5 w-5 text-[color:var(--color-primary)]" /> Ajuster les participants</div>
+                  <div className="mb-4 flex items-center gap-2 font-heading text-lg font-semibold text-[color:var(--color-text-title)]"><SlidersHorizontal className="h-5 w-5 text-[color:var(--color-primary)]" /> Ajuster les participants</div>
                   <input type="range" min="20" max="600" step="5" value={adjustedParticipants} onChange={(event) => setAdjustedParticipants(Number(event.target.value))} className="w-full accent-[color:var(--color-primary)]" />
-                  <div className="mt-2 flex justify-between text-sm text-[color:var(--color-muted-foreground)]"><span>20</span><span className="font-semibold text-[color:var(--color-primary-dark)]">{adjustedParticipants} participants</span><span>600</span></div>
+                  <div className="mt-2 flex justify-between text-sm text-[color:var(--color-text-muted)]"><span>20</span><span className="font-semibold text-[color:var(--color-primary)]">{adjustedParticipants} participants</span><span>600</span></div>
                 </div>
                 <div className="rounded-2xl border border-[color:var(--color-border)] bg-white p-5 shadow-sm">
-                  <div className="mb-4 flex items-center gap-2 text-lg font-semibold text-[color:var(--color-accent)]"><Users className="h-5 w-5 text-[color:var(--color-primary)]" /> Ajuster les bénévoles</div>
+                  <div className="mb-4 flex items-center gap-2 font-heading text-lg font-semibold text-[color:var(--color-text-title)]"><Users className="h-5 w-5 text-[color:var(--color-primary)]" /> Ajuster les bénévoles</div>
                   <input type="range" min="1" max="80" step="1" value={adjustedVolunteers} onChange={(event) => setAdjustedVolunteers(Number(event.target.value))} className="w-full accent-[color:var(--color-primary)]" />
-                  <div className="mt-2 flex justify-between text-sm text-[color:var(--color-muted-foreground)]"><span>1</span><span className="font-semibold text-[color:var(--color-primary-dark)]">{adjustedVolunteers} bénévoles</span><span>80</span></div>
+                  <div className="mt-2 flex justify-between text-sm text-[color:var(--color-text-muted)]"><span>1</span><span className="font-semibold text-[color:var(--color-primary)]">{adjustedVolunteers} bénévoles</span><span>80</span></div>
                 </div>
               </div>
 
-              <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))" }}>
+              <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))" }}>
                 <Card>
-                  <CardHeader><CardTitle className="flex items-center gap-2 text-[color:var(--color-accent)]"><Euro className="h-5 w-5 text-[color:var(--color-primary)]" /> Budget simplifié</CardTitle></CardHeader>
+                  <CardHeader><CardTitle className="flex items-center gap-2 font-heading text-[color:var(--color-text-title)]"><Euro className="h-5 w-5 text-[color:var(--color-primary)]" /> Budget simplifié</CardTitle></CardHeader>
                   <CardContent>
                     <ChartContainer config={chartConfig} className="h-72 w-full">
                       <BarChart data={chartData} margin={{ top: 20, right: 20, left: 0, bottom: 20 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e9e3d8" />
-                        <XAxis dataKey="name" tick={{ fontSize: 12, fill: "#6b6f80" }} />
-                        <YAxis tick={{ fontSize: 12, fill: "#6b6f80" }} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="#d0d0d7" />
+                        <XAxis dataKey="name" tick={{ fontSize: 12, fill: "#73737c" }} />
+                        <YAxis tick={{ fontSize: 12, fill: "#73737c" }} />
                         <ChartTooltip content={<ChartTooltipContent />} />
                         <Bar dataKey="amount" fill="var(--color-amount)" radius={[8, 8, 0, 0]} />
                       </BarChart>
                     </ChartContainer>
                     <div className="mt-3 grid gap-2 text-sm" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))" }}>
-                      <span>Entrées: {formatEuro(plan.ticketRevenue)}</span>
-                      <span>Animations: {formatEuro(plan.animationRevenue)}</span>
-                      <span>Sponsors: {formatEuro(plan.sponsorRevenue)}</span>
-                      <span>Dépenses: {formatEuro(plan.totalCosts)}</span>
+                      <span className="text-[color:var(--color-text-subtitle)]">Entrées: <strong className="text-[color:var(--color-text-title)]">{formatEuro(plan.ticketRevenue)}</strong></span>
+                      <span className="text-[color:var(--color-text-subtitle)]">Animations: <strong className="text-[color:var(--color-text-title)]">{formatEuro(plan.animationRevenue)}</strong></span>
+                      <span className="text-[color:var(--color-text-subtitle)]">Sponsors: <strong className="text-[color:var(--color-text-title)]">{formatEuro(plan.sponsorRevenue)}</strong></span>
+                      <span className="text-[color:var(--color-text-subtitle)]">Dépenses: <strong className="text-[color:var(--color-text-title)]">{formatEuro(plan.totalCosts)}</strong></span>
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card>
-                  <CardHeader><CardTitle className="flex items-center gap-2 text-[color:var(--color-accent)]"><Users className="h-5 w-5 text-[color:var(--color-primary)]" /> Staffing recommandé</CardTitle></CardHeader>
+                  <CardHeader><CardTitle className="flex items-center gap-2 font-heading text-[color:var(--color-text-title)]"><Users className="h-5 w-5 text-[color:var(--color-primary)]" /> Staffing recommandé</CardTitle></CardHeader>
                   <CardContent className="space-y-3">
                     {([
                       ["Coordination", 1],
@@ -701,8 +829,9 @@ export default function OneDayEventPlanner() {
                       ["Animations et stands", Math.max(1, Math.ceil(plan.recommendedVolunteers * 0.3))],
                       ["Installation et rangement", Math.max(2, Math.ceil(plan.recommendedVolunteers * 0.25))],
                     ] as const).filter((row) => row[1] > 0).map(([role, count]) => (
-                      <div key={role} className="flex items-center justify-between rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-background)] p-3">
-                        <span className="font-medium">{role}</span><span className="text-[color:var(--color-primary-dark)] font-semibold">{count} pers.</span>
+                      <div key={role} className="flex items-center justify-between rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-strip)] p-3">
+                        <span className="font-medium text-[color:var(--color-text-title)]">{role}</span>
+                        <span className="rounded-full bg-[color:var(--color-primary)] px-3 py-0.5 text-xs font-semibold text-white">{count} pers.</span>
                       </div>
                     ))}
                   </CardContent>
@@ -710,19 +839,19 @@ export default function OneDayEventPlanner() {
               </div>
 
               <Card>
-                <CardHeader><CardTitle className="flex items-center gap-2 text-[color:var(--color-accent)]"><ShoppingCart className="h-5 w-5 text-[color:var(--color-primary)]" /> Liste de courses estimée</CardTitle></CardHeader>
+                <CardHeader><CardTitle className="flex items-center gap-2 font-heading text-[color:var(--color-text-title)]"><ShoppingCart className="h-5 w-5 text-[color:var(--color-primary)]" /> Liste de courses estimée</CardTitle></CardHeader>
                 <CardContent className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))" }}>
                   {shoppingList.map((group) => (
-                    <div key={group.category} className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-background)] p-3">
-                      <p className="font-semibold text-[color:var(--color-accent)]">{group.category}</p>
+                    <div key={group.category} className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-strip)] p-4">
+                      <p className="font-heading font-semibold text-[color:var(--color-text-title)]">{group.category}</p>
                       <div className="mt-2 space-y-2">
                         {group.items.map((item) => (
                           <div key={`${group.category}-${item.label}`} className="border-t border-[color:var(--color-border)] pt-2 text-sm first:border-t-0 first:pt-0">
                             <div className="flex items-start justify-between gap-2">
-                              <span className="font-medium">{item.label}</span>
-                              <span className="text-[color:var(--color-primary-dark)] font-semibold">{formatEuro(item.budget)}</span>
+                              <span className="font-medium text-[color:var(--color-text-title)]">{item.label}</span>
+                              <span className="font-semibold text-[color:var(--color-primary)]">{formatEuro(item.budget)}</span>
                             </div>
-                            <p className="text-[color:var(--color-muted-foreground)]">{item.quantity}</p>
+                            <p className="text-[color:var(--color-text-muted)]">{item.quantity}</p>
                           </div>
                         ))}
                       </div>
@@ -731,15 +860,15 @@ export default function OneDayEventPlanner() {
                 </CardContent>
               </Card>
 
-              <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))" }}>
+              <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))" }}>
                 <Card>
-                  <CardHeader><CardTitle className="flex items-center gap-2 text-[color:var(--color-accent)]"><CalendarDays className="h-5 w-5 text-[color:var(--color-primary)]" /> Rétroplanning</CardTitle></CardHeader>
+                  <CardHeader><CardTitle className="flex items-center gap-2 font-heading text-[color:var(--color-text-title)]"><CalendarDays className="h-5 w-5 text-[color:var(--color-primary)]" /> Rétroplanning</CardTitle></CardHeader>
                   <CardContent className="space-y-3">
                     {retroplanning.map((item) => (
-                      <div key={item.date} className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-background)] p-3">
-                        <div className="flex items-center justify-between gap-3"><span className="font-semibold text-[color:var(--color-primary-dark)]">{item.date}</span><span className="text-sm text-[color:var(--color-muted-foreground)]">{item.when}</span></div>
-                        <p className="mt-1 text-sm font-medium">{item.task}</p>
-                        <p className="mt-1 text-xs text-[color:var(--color-muted-foreground)]">Responsable: {item.owner}</p>
+                      <div key={item.date} className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-strip)] p-3">
+                        <div className="flex items-center justify-between gap-3"><span className="font-heading font-semibold text-[color:var(--color-primary)]">{item.date}</span><span className="text-sm text-[color:var(--color-text-muted)]">{item.when}</span></div>
+                        <p className="mt-1 text-sm font-medium text-[color:var(--color-text-title)]">{item.task}</p>
+                        <p className="mt-1 text-xs text-[color:var(--color-text-muted)]">Responsable: {item.owner}</p>
                       </div>
                     ))}
                   </CardContent>
@@ -747,28 +876,28 @@ export default function OneDayEventPlanner() {
 
                 <div className="space-y-4">
                   <Card>
-                    <CardHeader><CardTitle className="flex items-center gap-2 text-[color:var(--color-accent)]"><CheckCircle2 className="h-5 w-5 text-[color:var(--color-primary)]" /> Checklist administrative</CardTitle></CardHeader>
+                    <CardHeader><CardTitle className="flex items-center gap-2 font-heading text-[color:var(--color-text-title)]"><CheckCircle2 className="h-5 w-5 text-[color:var(--color-primary)]" /> Checklist administrative</CardTitle></CardHeader>
                     <CardContent className="space-y-2">
-                      {[...config.admin, ...(alcoholSelected ? ["Demander l'autorisation de buvette temporaire en mairie"] : [])].map((item) => <div key={item} className="flex gap-2 text-sm"><CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-600" /><span>{item}</span></div>)}
+                      {[...config.admin, ...(alcoholSelected ? ["Demander l'autorisation de buvette temporaire en mairie"] : [])].map((item) => <div key={item} className="flex gap-2 text-sm text-[color:var(--color-text-subtitle)]"><CheckCircle2 className="mt-0.5 h-4 w-4 text-[color:var(--color-primary)]" /><span>{item}</span></div>)}
                     </CardContent>
                   </Card>
                   <Card>
-                    <CardHeader><CardTitle className="flex items-center gap-2 text-[color:var(--color-accent)]"><Sparkles className="h-5 w-5 text-[color:var(--color-primary)]" /> Animations retenues</CardTitle></CardHeader>
+                    <CardHeader><CardTitle className="flex items-center gap-2 font-heading text-[color:var(--color-text-title)]"><Sparkles className="h-5 w-5 text-[color:var(--color-primary)]" /> Animations retenues</CardTitle></CardHeader>
                     <CardContent className="flex flex-wrap gap-2">
-                      {input.selectedAnimations.map((item) => <span key={item} className="rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-background)] px-3 py-1 text-sm">{item}</span>)}
+                      {input.selectedAnimations.map((item) => <span key={item} className="rounded-full border border-[color:var(--color-primary)] bg-[color:var(--color-bg-blue)] px-3 py-1 text-sm font-medium text-[color:var(--color-primary)]">{item}</span>)}
                     </CardContent>
                   </Card>
                 </div>
               </div>
 
               <Card>
-                <CardHeader><CardTitle className="text-[color:var(--color-accent)]">Scénarios financiers</CardTitle></CardHeader>
-                <CardContent className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))" }}>
+                <CardHeader><CardTitle className="font-heading text-[color:var(--color-text-title)]">Scénarios financiers</CardTitle></CardHeader>
+                <CardContent className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
                   {scenarios.map((scenario) => (
-                    <div key={scenario.label} className={`rounded-xl border p-4 ${scenario.net >= 0 ? "bg-emerald-50 border-emerald-200" : "bg-red-50 border-red-200"}`}>
-                      <p className="font-semibold">{scenario.label}</p>
-                      <p className="mt-1 text-sm text-[color:var(--color-muted-foreground)]">{scenario.participants} participants</p>
-                      <p className={`mt-2 text-2xl font-bold ${scenario.net >= 0 ? "text-emerald-700" : "text-red-700"}`}>{formatEuro(scenario.net)}</p>
+                    <div key={scenario.label} className={`rounded-2xl border p-4 ${scenario.net >= 0 ? "bg-emerald-50 border-emerald-200" : "bg-red-50 border-red-200"}`}>
+                      <p className="font-heading font-semibold text-[color:var(--color-text-title)]">{scenario.label}</p>
+                      <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{scenario.participants} participants</p>
+                      <p className={`mt-2 font-heading text-2xl font-bold ${scenario.net >= 0 ? "text-emerald-700" : "text-red-700"}`}>{formatEuro(scenario.net)}</p>
                     </div>
                   ))}
                 </CardContent>
@@ -777,28 +906,30 @@ export default function OneDayEventPlanner() {
               <Card>
                 <CardHeader>
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <CardTitle className="flex items-center gap-2 text-[color:var(--color-accent)]"><Users className="h-5 w-5 text-[color:var(--color-primary)]" /> Messages prêts à copier</CardTitle>
-                    <span className="text-sm text-[color:var(--color-muted-foreground)]">Communication adhérents, bénévoles, participants</span>
+                    <CardTitle className="flex items-center gap-2 font-heading text-[color:var(--color-text-title)]"><Users className="h-5 w-5 text-[color:var(--color-primary)]" /> Messages prêts à copier</CardTitle>
+                    <span className="text-sm text-[color:var(--color-text-muted)]">Communication adhérents, bénévoles, participants</span>
                   </div>
                 </CardHeader>
                 <CardContent className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))" }}>
                   {messages.map((message) => (
-                    <div key={message.title} className="rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-background)] p-4">
+                    <div key={message.title} className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-strip)] p-4">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="font-semibold text-[color:var(--color-foreground)]">{message.title}</p>
-                        <Button variant="outline" size="sm" onClick={() => copyMessage(message.title, message.text)} className="gap-2"><Clipboard className="h-4 w-4" /> {copiedMessage === message.title ? "Copié" : "Copier"}</Button>
+                        <p className="font-heading font-semibold text-[color:var(--color-text-title)]">{message.title}</p>
+                        <Button variant="secondary" size="sm" onClick={() => copyMessage(message.title, message.text)}>
+                          <Clipboard className="h-4 w-4" /> {copiedMessage === message.title ? "Copié" : "Copier"}
+                        </Button>
                       </div>
-                      <p className="mt-4 whitespace-pre-line text-sm leading-6 text-[color:var(--color-muted-foreground)]">{message.text}</p>
+                      <p className="mt-4 whitespace-pre-line text-sm leading-6 text-[color:var(--color-text-subtitle)]">{message.text}</p>
                     </div>
                   ))}
                 </CardContent>
               </Card>
 
-              <div className="rounded-2xl border border-[color:var(--color-primary-soft)] bg-[color:var(--color-primary-soft)] p-5">
-                <div className="flex items-center gap-2 text-xl font-semibold text-[color:var(--color-primary-dark)]"><Lightbulb className="h-5 w-5" /> Tips à vérifier pour votre {input.eventType.toLowerCase()}</div>
-                <p className="mt-2 text-sm text-[color:var(--color-primary-dark)]/80">Ces points dépendent du lieu, de la commune et du format exact de l&apos;événement. Ils sont là pour vous aider à poser les bonnes questions sans complexifier le MVP.</p>
+              <div className="rounded-3xl border border-[color:var(--color-bg-blue)] bg-[color:var(--color-bg-blue)] p-6">
+                <div className="flex items-center gap-2 font-heading text-xl font-semibold text-[color:var(--color-primary)]"><Lightbulb className="h-5 w-5" /> Tips à vérifier pour votre {input.eventType.toLowerCase()}</div>
+                <p className="mt-2 text-sm text-[color:var(--color-text-subtitle)]">Ces points dépendent du lieu, de la commune et du format exact de l&apos;événement. Ils sont là pour vous aider à poser les bonnes questions sans complexifier le MVP.</p>
                 <div className="mt-4 grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
-                  {config.tips.map((tip) => <div key={tip} className="flex gap-2 rounded-xl bg-white p-3 text-sm font-medium text-[color:var(--color-muted-foreground)]"><CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-600" /><span>{tip}</span></div>)}
+                  {config.tips.map((tip) => <div key={tip} className="flex gap-2 rounded-2xl bg-white p-3 text-sm font-medium text-[color:var(--color-text-subtitle)] shadow-sm"><CheckCircle2 className="mt-0.5 h-4 w-4 text-[color:var(--color-primary)]" /><span>{tip}</span></div>)}
                 </div>
               </div>
             </motion.section>
