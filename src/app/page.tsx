@@ -1,6 +1,5 @@
 import { Nav } from "@/components/landing/Nav";
 import { Hero } from "@/components/landing/Hero";
-import { Stats } from "@/components/landing/Stats";
 import { Split, BudgetVisual, VolunteerVisual, ShoppingVisual } from "@/components/landing/Split";
 import { EventTypes } from "@/components/landing/EventTypes";
 import { Faq } from "@/components/landing/Faq";
@@ -11,15 +10,15 @@ export default function Home() {
   return (
     <>
       <Nav />
-      <main id="fonctionnalites">
+      <main>
         <Hero />
-        <Stats />
+        <section id="fonctionnalites" aria-hidden className="h-0" />
         <Split
-          eyebrow="Budget clair"
-          headline={<>Un budget que <span className="highlight">tout le monde comprend</span>, sans jargon financier.</>}
-          body="Argent qui rentre, dépenses, argent restant : on parle comme une association, pas comme un cabinet comptable. Vous voyez immédiatement si l'événement est réaliste."
+          eyebrow="Gestion claire de votre budget"
+          headline={<>Un budget <span className="highlight">clair</span> pour tous.</>}
+          body="Recette, dépenses, bénéfices : on parle comme une association, pas comme un cabinet comptable. Vous voyez immédiatement si l'événement est réaliste."
           features={[
-            { text: "Argent restant estimé, mis à jour en temps réel" },
+            { text: "Bénéfices estimés, mis à jour en temps réel" },
             { text: "Participants minimum sans perte" },
             { text: "Scénarios pessimiste, actuel, optimiste" },
           ]}
@@ -27,8 +26,8 @@ export default function Home() {
           visual={<BudgetVisual />}
         />
         <Split
-          eyebrow="Bénévoles"
-          headline={<>Le bon nombre de <span className="highlight">bénévoles</span>, sans sur-mobiliser ni sous-staffer.</>}
+          eyebrow="Gestion de vos bénévoles"
+          headline={<>Le bon nombre de <span className="highlight">bénévoles</span>.</>}
           body="On part du nombre de participants et des animations choisies pour vous proposer une répartition par rôle. Vous voyez instantanément où vous êtes en sous-effectif."
           features={[
             { text: "Recommandation par rôle : caisse, buvette, animation, rangement" },
@@ -40,12 +39,12 @@ export default function Home() {
           bg="bg-blue"
         />
         <Split
-          eyebrow="Logistique et démarches"
-          headline={<>Une <span className="highlight">liste de courses</span> et les démarches admin, déjà dégrossies.</>}
+          eyebrow="Logistique"
+          headline={<>Une liste de courses <span className="highlight">prête</span>.</>}
           body="Plus besoin de partir de la mémoire du président précédent. Nourriture, softs, location, animations : tout est estimé en quantité et en budget."
           features={[
-            { text: "Liste de courses par catégorie avec budget estimé" },
-            { text: "Checklist administrative selon le format" },
+            { text: "Liste par catégorie avec budget estimé" },
+            { text: "Quantités calculées sur vos participants" },
             { text: "Alerte buvette temporaire si vous servez de l'alcool" },
           ]}
           imagePosition="right"

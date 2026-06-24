@@ -365,7 +365,7 @@ export default function OneDayEventPlanner() {
         setAdjustedParticipants(decoded.expectedParticipants);
         setAdjustedVolunteers(decoded.availableVolunteers);
         setIsGenerated(true);
-        setStep(2);
+        setStep(3);
         return;
       }
     }
@@ -400,7 +400,7 @@ export default function OneDayEventPlanner() {
 
   const chartData = [
     { name: "Budget", amount: input.startingBudget },
-    { name: "Argent qui rentre", amount: plan.totalRevenue },
+    { name: "Recette", amount: plan.totalRevenue },
     { name: "Dépenses", amount: plan.totalCosts },
     { name: "Bénéfices", amount: plan.net },
   ];
@@ -520,29 +520,25 @@ export default function OneDayEventPlanner() {
     window.setTimeout(() => setCopiedMessage(null), 1600);
   }
 
-  const steps = ["Événement", "Budget", "Plan généré"];
+  const steps = ["Événement", "Budget", "Animations", "Plan généré"];
+  const lastStep = steps.length - 1;
 
   return (
     <main className="bg-transparent px-4 py-8">
       <section className="mx-auto max-w-[1280px] space-y-5 px-2">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[color:var(--color-primary)] text-white">
-              <PartyPopper className="h-5 w-5" />
-            </span>
-            <div>
-              <p className="text-xs font-medium uppercase tracking-[0.12em] text-[color:var(--color-primary)]">Wizard</p>
-              <h1 className="font-heading text-xl font-bold text-[color:var(--color-text-title)] sm:text-2xl">
-                Décrivez, on s&apos;occupe du <span className="highlight">reste</span>
-              </h1>
-            </div>
-          </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[color:var(--color-primary)] text-white">
+            <PartyPopper className="h-5 w-5" />
+          </span>
+          <h1 className="font-heading text-xl font-bold text-[color:var(--color-text-title)] sm:text-2xl">
+            Décrivez, on s&apos;occupe du <span className="highlight">reste</span>
+          </h1>
         </div>
 
         <div className="flex flex-wrap gap-2">
           {steps.map((label, index) => {
             const active = step === index;
-            const clickable = index < 2 || isGenerated;
+            const clickable = index < lastStep || isGenerated;
             return (
               <button
                 key={label}
@@ -691,60 +687,8 @@ export default function OneDayEventPlanner() {
 
                   <div className="mt-5 flex gap-2">
                     <Button variant="secondary" onClick={() => setStep(0)}>Retour</Button>
-                    <Button className="flex-1" onClick={generatePlan}>Générer mon plan</Button>
+                    <Button className="flex-1" onClick={() => setStep(2)}>Continuer vers les animations</Button>
                   </div>
-                </div>
-
-                <div className="rounded-2xl border border-[color:var(--color-border)] bg-white p-6 shadow-sm">
-                  <div className="mb-3 flex items-center gap-2">
-                    <Sparkles className="h-5 w-5 text-[color:var(--color-primary)]" />
-                    <h3 className="font-heading text-lg font-semibold text-[color:var(--color-text-title)]">Animations prévues</h3>
-                  </div>
-                  <p className="text-sm text-[color:var(--color-text-subtitle)]">
-                    Cliquez sur une carte pour l&apos;activer ou la désactiver.
-                  </p>
-                  <div className="mt-4 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
-                    {config.animations.map((animation) => {
-                      const selected = input.selectedAnimations.includes(animation.label);
-                      const Icon = iconFor(animation.label);
-                      return (
-                        <button
-                          key={animation.label}
-                          type="button"
-                          onClick={() => toggleAnimation(animation.label)}
-                          aria-pressed={selected}
-                          className={`flex h-full items-start gap-3 rounded-2xl border p-3 text-left transition ${selected ? "border-[color:var(--color-primary)] bg-[color:var(--color-bg-blue)] shadow-[0_4px_18px_0_rgba(49,107,242,0.12)]" : "border-[color:var(--color-border)] bg-white hover:border-[color:var(--color-primary)] hover:bg-[color:var(--color-bg-strip)]"}`}
-                        >
-                          <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${selected ? "bg-[color:var(--color-primary)] text-white" : "bg-[color:var(--color-bg-blue)] text-[color:var(--color-primary)]"}`}>
-                            <Icon className="h-4 w-4" />
-                          </span>
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate font-heading text-sm font-semibold text-[color:var(--color-text-title)]">{animation.label}</p>
-                            <div className="mt-1 flex flex-wrap items-center gap-1 text-[11px]">
-                              <span className="rounded-full bg-emerald-50 px-1.5 py-0.5 font-semibold text-emerald-700">+{formatEuro(animation.revenuePerParticipant)}/p</span>
-                              <span className="rounded-full bg-[color:var(--color-bg-grey)] px-1.5 py-0.5 font-semibold text-[color:var(--color-text-muted)]">−{formatEuro(animation.fixedCost)} fixe</span>
-                              {animation.label.toLowerCase().includes("alcool") && (
-                                <span className="rounded-full bg-amber-50 px-1.5 py-0.5 font-semibold text-amber-700">Buvette</span>
-                              )}
-                            </div>
-                          </div>
-                          <span
-                            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition ${
-                              selected
-                                ? "border-[color:var(--color-primary)] bg-[color:var(--color-primary)] text-white"
-                                : "border-[color:var(--color-border)] bg-white text-transparent"
-                            }`}
-                            aria-hidden
-                          >
-                            <CheckCircle2 className="h-3 w-3" />
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <p className="mt-3 text-xs text-[color:var(--color-text-muted)]">
-                    {input.selectedAnimations.length} animation{input.selectedAnimations.length > 1 ? "s" : ""} sélectionnée{input.selectedAnimations.length > 1 ? "s" : ""}
-                  </p>
                 </div>
               </div>
 
@@ -759,16 +703,108 @@ export default function OneDayEventPlanner() {
                     <div className={`rounded-2xl border p-4 ${statusClasses(plan.budgetStatus)}`}>
                       <p className="text-sm font-medium">Bénéfices estimés</p>
                       <p className="font-heading text-3xl font-bold">{formatEuro(plan.net)}</p>
-                      <p className="mt-1 text-xs opacity-80">Revenus − dépenses, hors budget de départ.</p>
+                      <p className="mt-1 text-xs opacity-80">Recette − dépenses, hors budget de départ.</p>
                     </div>
                     <p className="text-sm text-[color:var(--color-text-subtitle)]">
                       {plan.minimumParticipants === 0
-                        ? "Pas de seuil minimum : vos revenus fixes (sponsors, emplacements...) couvrent déjà les coûts fixes."
+                        ? "Pas de seuil minimum : vos recettes fixes (sponsors, emplacements...) couvrent déjà les coûts fixes."
+                        : <>Il faut environ <strong>{plan.minimumParticipants} participants</strong> pour ne pas perdre d&apos;argent.</>}
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            </motion.section>
+          )}
+
+          {step === 2 && (
+            <motion.section
+              key="step-2"
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -14 }}
+              transition={{ duration: 0.35 }}
+              className="grid gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]"
+            >
+              <div className="space-y-5">
+                <div className="rounded-2xl border border-[color:var(--color-border)] bg-white p-6 shadow-sm">
+                  <div className="mb-2 flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-[color:var(--color-primary)]" />
+                    <h2 className="font-heading text-xl font-semibold text-[color:var(--color-text-title)]">3. Choisissez vos animations</h2>
+                  </div>
+                  <p className="text-sm text-[color:var(--color-text-subtitle)]">
+                    Cliquez sur une carte pour l&apos;activer ou la désactiver. Chaque animation affiche son revenu et son coût estimés.
+                  </p>
+                  <div className="mt-4 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-2">
+                    {config.animations.map((animation) => {
+                      const selected = input.selectedAnimations.includes(animation.label);
+                      const Icon = iconFor(animation.label);
+                      return (
+                        <button
+                          key={animation.label}
+                          type="button"
+                          onClick={() => toggleAnimation(animation.label)}
+                          aria-pressed={selected}
+                          className={`flex h-full items-start gap-3 rounded-2xl border p-4 text-left transition ${selected ? "border-[color:var(--color-primary)] bg-[color:var(--color-bg-blue)] shadow-[0_4px_18px_0_rgba(49,107,242,0.12)]" : "border-[color:var(--color-border)] bg-white hover:border-[color:var(--color-primary)] hover:bg-[color:var(--color-bg-strip)]"}`}
+                        >
+                          <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${selected ? "bg-[color:var(--color-primary)] text-white" : "bg-[color:var(--color-bg-blue)] text-[color:var(--color-primary)]"}`}>
+                            <Icon className="h-5 w-5" />
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate font-heading text-base font-semibold text-[color:var(--color-text-title)]">{animation.label}</p>
+                            <div className="mt-1.5 flex flex-wrap items-center gap-1 text-[11px]">
+                              <span className="rounded-full bg-emerald-50 px-2 py-0.5 font-semibold text-emerald-700">+{formatEuro(animation.revenuePerParticipant)}/p</span>
+                              <span className="rounded-full bg-[color:var(--color-bg-grey)] px-2 py-0.5 font-semibold text-[color:var(--color-text-muted)]">−{formatEuro(animation.fixedCost)} fixe</span>
+                              {animation.label.toLowerCase().includes("alcool") && (
+                                <span className="rounded-full bg-amber-50 px-2 py-0.5 font-semibold text-amber-700">Buvette</span>
+                              )}
+                            </div>
+                          </div>
+                          <span
+                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition ${
+                              selected
+                                ? "border-[color:var(--color-primary)] bg-[color:var(--color-primary)] text-white"
+                                : "border-[color:var(--color-border)] bg-white text-transparent"
+                            }`}
+                            aria-hidden
+                          >
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="mt-3 text-xs text-[color:var(--color-text-muted)]">
+                    {input.selectedAnimations.length} animation{input.selectedAnimations.length > 1 ? "s" : ""} sélectionnée{input.selectedAnimations.length > 1 ? "s" : ""}
+                  </p>
+
+                  <div className="mt-5 flex gap-2">
+                    <Button variant="secondary" onClick={() => setStep(1)}>Retour</Button>
+                    <Button className="flex-1" onClick={generatePlan}>Générer mon plan</Button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="lg:sticky lg:top-24 lg:self-start">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 font-heading text-[color:var(--color-text-title)]">
+                      <Euro className="h-5 w-5 text-[color:var(--color-primary)]" /> Estimation instantanée
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className={`rounded-2xl border p-4 ${statusClasses(plan.budgetStatus)}`}>
+                      <p className="text-sm font-medium">Bénéfices estimés</p>
+                      <p className="font-heading text-3xl font-bold">{formatEuro(plan.net)}</p>
+                      <p className="mt-1 text-xs opacity-80">Recette − dépenses, hors budget de départ.</p>
+                    </div>
+                    <p className="text-sm text-[color:var(--color-text-subtitle)]">
+                      {plan.minimumParticipants === 0
+                        ? "Pas de seuil minimum : vos recettes fixes couvrent déjà les coûts fixes."
                         : <>Il faut environ <strong>{plan.minimumParticipants} participants</strong> pour ne pas perdre d&apos;argent.</>}
                     </p>
                     {animationRows.length > 0 && (
                       <div className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-strip)] p-3 text-sm">
-                        <p className="font-heading font-semibold text-[color:var(--color-text-title)]">Coût et revenu par animation</p>
+                        <p className="font-heading font-semibold text-[color:var(--color-text-title)]">Coût et recette par animation</p>
                         <div className="mt-2 space-y-2">
                           {animationRows.map((row) => (
                             <div key={row.label} className="flex items-center justify-between gap-2 border-t border-[color:var(--color-border)] pt-2 first:border-t-0 first:pt-0">
@@ -785,9 +821,9 @@ export default function OneDayEventPlanner() {
             </motion.section>
           )}
 
-          {step === 2 && (
+          {step === 3 && (
             <motion.section
-              key="step-2"
+              key="step-3"
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -14 }}
@@ -897,18 +933,44 @@ export default function OneDayEventPlanner() {
                 <Card>
                   <CardHeader><CardTitle className="flex items-center gap-2 font-heading text-[color:var(--color-text-title)]"><Users className="h-5 w-5 text-[color:var(--color-primary)]" /> Staffing recommandé</CardTitle></CardHeader>
                   <CardContent className="space-y-3">
-                    {([
-                      ["Coordination", 1],
-                      ["Accueil et caisse", Math.max(1, Math.ceil(plan.recommendedVolunteers * 0.2))],
-                      ["Buvette ou restauration", input.selectedAnimations.some((item) => item.includes("Buvette") || item === "Repas") ? Math.max(2, Math.ceil(plan.recommendedVolunteers * 0.3)) : 0],
-                      ["Animations et stands", Math.max(1, Math.ceil(plan.recommendedVolunteers * 0.3))],
-                      ["Installation et rangement", Math.max(2, Math.ceil(plan.recommendedVolunteers * 0.25))],
-                    ] as const).filter((row) => row[1] > 0).map(([role, count]) => (
-                      <div key={role} className="flex items-center justify-between rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-strip)] p-3">
-                        <span className="font-medium text-[color:var(--color-text-title)]">{role}</span>
-                        <span className="rounded-full bg-[color:var(--color-primary)] px-3 py-0.5 text-xs font-semibold text-white">{count} pers.</span>
-                      </div>
-                    ))}
+                    {(() => {
+                      const hasBuvette = input.selectedAnimations.some((item) => item.includes("Buvette") || item === "Repas");
+                      const total = Math.max(1, adjustedVolunteers);
+                      const coord = Math.min(1, total);
+                      const rest = Math.max(0, total - coord);
+                      const weights = {
+                        caisse: 0.2,
+                        buvette: hasBuvette ? 0.3 : 0,
+                        anims: 0.3,
+                        install: 0.2,
+                      };
+                      const sum = weights.caisse + weights.buvette + weights.anims + weights.install;
+                      const alloc = (w: number) => sum > 0 ? Math.max(0, Math.round((w / sum) * rest)) : 0;
+                      const rows: Array<[string, number]> = [
+                        ["Coordination", coord],
+                        ["Accueil et caisse", alloc(weights.caisse)],
+                        ["Buvette ou restauration", alloc(weights.buvette)],
+                        ["Animations et stands", alloc(weights.anims)],
+                        ["Installation et rangement", alloc(weights.install)],
+                      ];
+                      const allocated = rows.reduce((s, [, n]) => s + n, 0);
+                      let drift = total - allocated;
+                      while (drift !== 0) {
+                        const idx = drift > 0
+                          ? rows.findIndex((_, i) => i > 0 && rows[i][1] >= 0)
+                          : rows.findIndex((_, i) => i > 0 && rows[i][1] > 0);
+                        if (idx === -1) break;
+                        rows[idx] = [rows[idx][0], rows[idx][1] + (drift > 0 ? 1 : -1)];
+                        drift += drift > 0 ? -1 : 1;
+                      }
+                      return rows.filter(([, n]) => n > 0).map(([role, count]) => (
+                        <div key={role} className="flex items-center justify-between rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-strip)] p-3">
+                          <span className="font-medium text-[color:var(--color-text-title)]">{role}</span>
+                          <span className="rounded-full bg-[color:var(--color-primary)] px-3 py-0.5 text-xs font-semibold text-white">{count} pers.</span>
+                        </div>
+                      ));
+                    })()}
+                    <p className="text-xs text-[color:var(--color-text-muted)]">Répartition sur {adjustedVolunteers} bénévole{adjustedVolunteers > 1 ? "s" : ""} (idéal : {plan.recommendedVolunteers}).</p>
                   </CardContent>
                 </Card>
               </div>

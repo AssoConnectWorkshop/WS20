@@ -51,9 +51,9 @@ export function BudgetVisual() {
       <div className="space-y-3">
         {[
           { label: "Budget de départ", value: "800 €", color: "bg-[color:var(--color-bg-strip)]" },
-          { label: "Argent qui rentre", value: "+ 1 956 €", color: "bg-[color:var(--color-primary-20)]" },
+          { label: "Recette", value: "+ 1 956 €", color: "bg-[color:var(--color-primary-20)]" },
           { label: "Dépenses", value: "− 1 144 €", color: "bg-[color:var(--color-bg-grey)]" },
-          { label: "Argent restant estimé", value: "612 €", color: "bg-emerald-50", emph: true },
+          { label: "Bénéfices estimés", value: "+ 812 €", color: "bg-emerald-50", emph: true },
         ].map((row) => (
           <div key={row.label} className={`flex items-center justify-between rounded-xl ${row.color} px-4 py-3`}>
             <span className="text-sm text-[color:var(--color-text-subtitle)]">{row.label}</span>

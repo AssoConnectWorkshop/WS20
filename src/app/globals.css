@@ -73,10 +73,12 @@ body {
   line-height: 1.6;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-heading);
-  color: var(--color-text-title);
-  letter-spacing: 0.03px;
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    color: var(--color-text-title);
+    letter-spacing: 0.03px;
+  }
 }
 
 .font-hand {
@@ -85,11 +87,14 @@ h1, h2, h3, h4, h5, h6 {
 
 .highlight {
   position: relative;
-  display: inline-block;
+  display: inline;
   background-image: linear-gradient(transparent 65%, var(--color-turquoise) 65%, var(--color-turquoise) 90%, transparent 90%);
+  background-repeat: no-repeat;
   padding: 0 0.1em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 
 .highlight-on-dark {
-  background-image: linear-gradient(transparent 65%, var(--color-turquoise-on-dark) 65%, var(--color-turquoise-on-dark) 90%, transparent 90%);
+  background-image: linear-gradient(transparent 65%, var(--color-yellow) 65%, var(--color-yellow) 90%, transparent 90%) !important;
 }
