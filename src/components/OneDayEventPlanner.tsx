@@ -489,7 +489,7 @@ export default function OneDayEventPlanner() {
 
   function generatePlan() {
     setIsGenerated(true);
-    setStep(2);
+    setStep(3);
     if (!confettiFired.current) {
       confettiFired.current = true;
       window.setTimeout(fireConfetti, 250);
