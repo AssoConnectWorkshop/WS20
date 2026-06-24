@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
+import confetti from "canvas-confetti";
 import {
   AlertTriangle,
   Beer,
@@ -63,6 +64,7 @@ type PlannerInput = {
   ticketPrice: number;
   availableVolunteers: number;
   hasSponsors: boolean;
+  sponsorAmount: number;
   selectedAnimations: string[];
 };
 
@@ -177,6 +179,7 @@ const DEFAULT_INPUT: PlannerInput = {
   ticketPrice: 4,
   availableVolunteers: 12,
   hasSponsors: true,
+  sponsorAmount: TYPE_CONFIG.Kermesse.sponsorRevenue,
   selectedAnimations: TYPE_CONFIG.Kermesse.animations.slice(0, 3).map((animation) => animation.label),
 };
 
@@ -213,18 +216,19 @@ function calculatePlan(input: PlannerInput, participantsOverride?: number, volun
   const config = TYPE_CONFIG[input.eventType];
   const selectedAnimations = getSelectedAnimationObjects(input);
   const ticketRevenue = input.isFree ? 0 : participants * input.ticketPrice;
-  const sponsorRevenue = input.hasSponsors ? config.sponsorRevenue : 0;
+  const sponsorRevenue = input.hasSponsors ? Math.max(0, input.sponsorAmount || 0) : 0;
   const animationRevenue = selectedAnimations.reduce((sum, animation) => sum + animation.fixedRevenue + participants * animation.revenuePerParticipant, 0);
   const animationFixedCost = selectedAnimations.reduce((sum, animation) => sum + animation.fixedCost, 0);
   const animationVariableCost = selectedAnimations.reduce((sum, animation) => sum + participants * animation.variableCost, 0);
   const animationVolunteers = selectedAnimations.reduce((sum, animation) => sum + animation.volunteerBoost, 0);
   const totalRevenue = ticketRevenue + sponsorRevenue + animationRevenue;
   const totalCosts = config.baseFixedCost + participants * config.baseVariableCost + animationFixedCost + animationVariableCost;
-  const net = input.startingBudget + totalRevenue - totalCosts;
+  const net = totalRevenue - totalCosts;
+  const cashAfter = input.startingBudget + net;
   const revenuePerParticipant = (input.isFree ? 0 : input.ticketPrice) + selectedAnimations.reduce((sum, animation) => sum + animation.revenuePerParticipant, 0);
   const variableCostPerParticipant = config.baseVariableCost + selectedAnimations.reduce((sum, animation) => sum + animation.variableCost, 0);
   const marginPerParticipant = Math.max(0.1, revenuePerParticipant - variableCostPerParticipant);
-  const minimumParticipants = Math.max(0, Math.ceil((config.baseFixedCost + animationFixedCost - input.startingBudget - sponsorRevenue - selectedAnimations.reduce((sum, animation) => sum + animation.fixedRevenue, 0)) / marginPerParticipant));
+  const minimumParticipants = Math.max(0, Math.ceil((config.baseFixedCost + animationFixedCost - sponsorRevenue - selectedAnimations.reduce((sum, animation) => sum + animation.fixedRevenue, 0)) / marginPerParticipant));
   const recommendedVolunteers = Math.max(4, Math.ceil(participants / config.volunteerRatio) + Math.ceil(animationVolunteers * 0.7));
   const volunteerGap = volunteers - recommendedVolunteers;
   const budgetStatus: Status = net >= 300 ? "green" : net >= 0 ? "orange" : "red";
@@ -240,6 +244,7 @@ function calculatePlan(input: PlannerInput, participantsOverride?: number, volun
     totalRevenue,
     totalCosts,
     net,
+    cashAfter,
     minimumParticipants,
     recommendedVolunteers,
     volunteerGap,
@@ -347,6 +352,7 @@ export default function OneDayEventPlanner() {
   const [copied, setCopied] = useState(false);
   const [copiedMessage, setCopiedMessage] = useState<string | null>(null);
   const [shareUrl, setShareUrl] = useState("");
+  const confettiFired = useRef(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -368,6 +374,7 @@ export default function OneDayEventPlanner() {
       setInput((cur) => ({
         ...cur,
         eventType: t,
+        sponsorAmount: TYPE_CONFIG[t].sponsorRevenue,
         selectedAnimations: TYPE_CONFIG[t].animations.slice(0, 3).map((a) => a.label),
       }));
     }
@@ -395,7 +402,7 @@ export default function OneDayEventPlanner() {
     { name: "Budget", amount: input.startingBudget },
     { name: "Argent qui rentre", amount: plan.totalRevenue },
     { name: "Dépenses", amount: plan.totalCosts },
-    { name: "Reste", amount: plan.net },
+    { name: "Bénéfices", amount: plan.net },
   ];
 
   const scenarios = [
@@ -405,7 +412,11 @@ export default function OneDayEventPlanner() {
   ].map((scenario) => ({ ...scenario, net: calculatePlan(input, scenario.participants, adjustedVolunteers).net }));
 
   const priorities = [
-    plan.net < 0 ? `Réduire les dépenses ou viser ${plan.minimumParticipants} participants minimum pour ne pas perdre d'argent.` : "Garder un petit coussin de sécurité dans le budget pour les imprévus.",
+    plan.net < 0
+      ? plan.minimumParticipants > 0
+        ? `Réduire les dépenses ou viser ${plan.minimumParticipants} participants minimum pour ne pas perdre d'argent.`
+        : "Réduire les dépenses fixes ou augmenter les revenus fixes (sponsors, subventions, emplacements)."
+      : "Garder un petit coussin de sécurité dans le budget pour les imprévus.",
     plan.volunteerGap < 0 ? `Trouver ${Math.abs(plan.volunteerGap)} bénévole(s) de plus pour tenir les stands sereinement.` : "Confirmer les bénévoles disponibles et leur donner un rôle simple.",
     alcoholSelected ? "Demander l'autorisation de buvette temporaire si vous servez de l'alcool." : "Vérifier assurance, mairie et règles applicables au lieu de l'événement.",
   ];
@@ -443,8 +454,46 @@ export default function OneDayEventPlanner() {
     setInput((current) => ({
       ...current,
       eventType,
+      sponsorAmount: TYPE_CONFIG[eventType].sponsorRevenue,
       selectedAnimations: TYPE_CONFIG[eventType].animations.slice(0, 3).map((animation) => animation.label),
     }));
+  }
+
+  function fireConfetti() {
+    const duration = 1400;
+    const end = Date.now() + duration;
+    const colors = ["#316bf2", "#87dfd5", "#f6c131", "#ffffff"];
+    const frame = () => {
+      confetti({
+        particleCount: 4,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0, y: 0.7 },
+        colors,
+        startVelocity: 55,
+      });
+      confetti({
+        particleCount: 4,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1, y: 0.7 },
+        colors,
+        startVelocity: 55,
+      });
+      if (Date.now() < end) {
+        requestAnimationFrame(frame);
+      }
+    };
+    frame();
+  }
+
+  function generatePlan() {
+    setIsGenerated(true);
+    setStep(2);
+    if (!confettiFired.current) {
+      confettiFired.current = true;
+      window.setTimeout(fireConfetti, 250);
+    }
   }
 
   function toggleAnimation(label: string) {
@@ -474,20 +523,19 @@ export default function OneDayEventPlanner() {
   const steps = ["Événement", "Budget", "Plan généré"];
 
   return (
-    <main className="bg-transparent px-4 py-10">
-      <section className="mx-auto max-w-[1280px] space-y-6 px-2">
-        <div className="relative overflow-hidden rounded-3xl border border-[color:var(--color-border)] bg-white p-6 shadow-sm">
-          <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-[color:var(--color-bg-blue)]" aria-hidden />
-          <div className="relative max-w-3xl space-y-3">
-            <div className="inline-flex items-center gap-2 rounded-full bg-[color:var(--color-bg-blue)] px-3 py-1 text-sm font-medium text-[color:var(--color-primary)]">
-              <PartyPopper className="h-4 w-4" /> Wizard de planification
+    <main className="bg-transparent px-4 py-8">
+      <section className="mx-auto max-w-[1280px] space-y-5 px-2">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[color:var(--color-primary)] text-white">
+              <PartyPopper className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="text-xs font-medium uppercase tracking-[0.12em] text-[color:var(--color-primary)]">Wizard</p>
+              <h1 className="font-heading text-xl font-bold text-[color:var(--color-text-title)] sm:text-2xl">
+                Décrivez, on s&apos;occupe du <span className="highlight">reste</span>
+              </h1>
             </div>
-            <h1 className="font-heading text-[2rem] font-bold tracking-tight text-[color:var(--color-text-title)] sm:text-[2.4rem]">
-              Décrivez votre événement, on s&apos;occupe du <span className="highlight">reste</span>
-            </h1>
-            <p className="text-[color:var(--color-text-subtitle)]">
-              Deux étapes, un dashboard complet : budget facile à lire, bénévoles nécessaires, achats à prévoir, démarches à vérifier, prochaines priorités.
-            </p>
           </div>
         </div>
 
@@ -570,66 +618,92 @@ export default function OneDayEventPlanner() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -14 }}
               transition={{ duration: 0.35 }}
-              className="grid gap-4"
-              style={{ gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))" }}
+              className="grid gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]"
             >
-              <div className="space-y-5 rounded-2xl border border-[color:var(--color-border)] bg-white p-6 shadow-sm">
-                <h2 className="font-heading text-xl font-semibold text-[color:var(--color-text-title)]">2. Budget et ressources</h2>
-                <label className={labelClass}>
-                  <span>Budget de départ</span>
-                  <div className="relative">
-                    <input type="number" className={`${inputClass} pr-10`} value={input.startingBudget} onChange={(event) => updateInput("startingBudget", Number(event.target.value))} />
-                    <span className="absolute right-3 top-3 text-[color:var(--color-text-muted)]">€</span>
-                  </div>
-                </label>
-                <label className={labelClass}>
-                  <span>Participants espérés</span>
-                  <input type="number" className={inputClass} value={input.expectedParticipants} onChange={(event) => updateInput("expectedParticipants", Number(event.target.value))} />
-                </label>
-                <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))" }}>
-                  <button type="button" onClick={() => updateInput("isFree", true)} className={`rounded-[50px] border px-4 py-2.5 text-center text-sm font-medium transition ${input.isFree ? "border-[color:var(--color-primary)] bg-[color:var(--color-primary)] text-white" : "border-[color:var(--color-border)] bg-white text-[color:var(--color-text-subtitle)]"}`}>Entrée gratuite</button>
-                  <button type="button" onClick={() => updateInput("isFree", false)} className={`rounded-[50px] border px-4 py-2.5 text-center text-sm font-medium transition ${!input.isFree ? "border-[color:var(--color-primary)] bg-[color:var(--color-primary)] text-white" : "border-[color:var(--color-border)] bg-white text-[color:var(--color-text-subtitle)]"}`}>Entrée payante</button>
-                </div>
-                {!input.isFree && (
-                  <label className={labelClass}>
-                    <span>Prix d&apos;entrée moyen</span>
-                    <div className="relative">
-                      <input type="number" className={`${inputClass} pr-10`} value={input.ticketPrice} onChange={(event) => updateInput("ticketPrice", Number(event.target.value))} />
-                      <span className="absolute right-3 top-3 text-[color:var(--color-text-muted)]">€</span>
-                    </div>
-                  </label>
-                )}
-                <label className={labelClass}>
-                  <span>Bénévoles disponibles</span>
-                  <input type="number" className={inputClass} value={input.availableVolunteers} onChange={(event) => updateInput("availableVolunteers", Number(event.target.value))} />
-                </label>
-                <button
-                  type="button"
-                  onClick={() => updateInput("hasSponsors", !input.hasSponsors)}
-                  className={`flex w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left text-sm font-medium transition ${input.hasSponsors ? "border-[color:var(--color-primary)] bg-[color:var(--color-bg-blue)] text-[color:var(--color-primary)]" : "border-[color:var(--color-border)] bg-white text-[color:var(--color-text-subtitle)]"}`}
-                >
-                  <span>Sponsors ou subvention prévue</span>
-                  <span className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition ${input.hasSponsors ? "bg-[color:var(--color-primary)]" : "bg-[color:var(--color-border)]"}`}>
-                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${input.hasSponsors ? "translate-x-6" : "translate-x-1"}`} />
-                  </span>
-                </button>
-
-                <div className="flex gap-2 pt-2">
-                  <Button variant="secondary" onClick={() => setStep(0)}>Retour</Button>
-                  <Button className="flex-1" onClick={() => { setIsGenerated(true); setStep(2); }}>Générer mon plan</Button>
-                </div>
-              </div>
-
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div className="rounded-2xl border border-[color:var(--color-border)] bg-white p-6 shadow-sm">
-                  <div className="mb-4 flex items-center gap-2">
+                  <h2 className="mb-5 font-heading text-xl font-semibold text-[color:var(--color-text-title)]">2. Budget et ressources</h2>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <label className={labelClass}>
+                      <span>Budget de départ</span>
+                      <div className="relative">
+                        <input type="number" className={`${inputClass} pr-10`} value={input.startingBudget} onChange={(event) => updateInput("startingBudget", Number(event.target.value))} />
+                        <span className="absolute right-3 top-3 text-[color:var(--color-text-muted)]">€</span>
+                      </div>
+                    </label>
+                    <label className={labelClass}>
+                      <span>Participants espérés</span>
+                      <input type="number" className={inputClass} value={input.expectedParticipants} onChange={(event) => updateInput("expectedParticipants", Number(event.target.value))} />
+                    </label>
+                  </div>
+
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    <button type="button" onClick={() => updateInput("isFree", true)} className={`rounded-[50px] border px-4 py-2.5 text-center text-sm font-medium transition ${input.isFree ? "border-[color:var(--color-primary)] bg-[color:var(--color-primary)] text-white" : "border-[color:var(--color-border)] bg-white text-[color:var(--color-text-subtitle)]"}`}>Entrée gratuite</button>
+                    <button type="button" onClick={() => updateInput("isFree", false)} className={`rounded-[50px] border px-4 py-2.5 text-center text-sm font-medium transition ${!input.isFree ? "border-[color:var(--color-primary)] bg-[color:var(--color-primary)] text-white" : "border-[color:var(--color-border)] bg-white text-[color:var(--color-text-subtitle)]"}`}>Entrée payante</button>
+                  </div>
+
+                  <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                    {!input.isFree && (
+                      <label className={labelClass}>
+                        <span>Prix d&apos;entrée moyen</span>
+                        <div className="relative">
+                          <input type="number" className={`${inputClass} pr-10`} value={input.ticketPrice} onChange={(event) => updateInput("ticketPrice", Number(event.target.value))} />
+                          <span className="absolute right-3 top-3 text-[color:var(--color-text-muted)]">€</span>
+                        </div>
+                      </label>
+                    )}
+                    <label className={labelClass}>
+                      <span>Bénévoles disponibles</span>
+                      <input type="number" className={inputClass} value={input.availableVolunteers} onChange={(event) => updateInput("availableVolunteers", Number(event.target.value))} />
+                    </label>
+                  </div>
+
+                  <div className="mt-4 space-y-3">
+                    <button
+                      type="button"
+                      onClick={() => updateInput("hasSponsors", !input.hasSponsors)}
+                      className={`flex w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left text-sm font-medium transition ${input.hasSponsors ? "border-[color:var(--color-primary)] bg-[color:var(--color-bg-blue)] text-[color:var(--color-primary)]" : "border-[color:var(--color-border)] bg-white text-[color:var(--color-text-subtitle)]"}`}
+                    >
+                      <span>Sponsors ou subvention prévue</span>
+                      <span className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition ${input.hasSponsors ? "bg-[color:var(--color-primary)]" : "bg-[color:var(--color-border)]"}`}>
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${input.hasSponsors ? "translate-x-6" : "translate-x-1"}`} />
+                      </span>
+                    </button>
+                    {input.hasSponsors && (
+                      <label className={labelClass}>
+                        <span>Montant prévu</span>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            min={0}
+                            step={10}
+                            className={`${inputClass} pr-10`}
+                            value={input.sponsorAmount}
+                            onChange={(event) => updateInput("sponsorAmount", Math.max(0, Number(event.target.value)))}
+                            placeholder="Ex: 350"
+                          />
+                          <span className="absolute right-3 top-3 text-[color:var(--color-text-muted)]">€</span>
+                        </div>
+                        <span className="block text-xs font-normal text-[color:var(--color-text-muted)]">Cumul de toutes vos subventions et sponsors confirmés ou attendus.</span>
+                      </label>
+                    )}
+                  </div>
+
+                  <div className="mt-5 flex gap-2">
+                    <Button variant="secondary" onClick={() => setStep(0)}>Retour</Button>
+                    <Button className="flex-1" onClick={generatePlan}>Générer mon plan</Button>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-[color:var(--color-border)] bg-white p-6 shadow-sm">
+                  <div className="mb-3 flex items-center gap-2">
                     <Sparkles className="h-5 w-5 text-[color:var(--color-primary)]" />
                     <h3 className="font-heading text-lg font-semibold text-[color:var(--color-text-title)]">Animations prévues</h3>
                   </div>
                   <p className="text-sm text-[color:var(--color-text-subtitle)]">
-                    Cliquez sur une carte pour l&apos;activer ou la désactiver. Chaque animation affiche son revenu et son coût estimés par participant.
+                    Cliquez sur une carte pour l&apos;activer ou la désactiver.
                   </p>
-                  <div className="mt-4 grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))" }}>
+                  <div className="mt-4 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
                     {config.animations.map((animation) => {
                       const selected = input.selectedAnimations.includes(animation.label);
                       const Icon = iconFor(animation.label);
@@ -639,37 +713,31 @@ export default function OneDayEventPlanner() {
                           type="button"
                           onClick={() => toggleAnimation(animation.label)}
                           aria-pressed={selected}
-                          className={`flex h-full flex-col items-start gap-2 rounded-2xl border p-4 text-left transition ${selected ? "border-[color:var(--color-primary)] bg-[color:var(--color-bg-blue)] shadow-[0_10px_30px_0_rgba(49,107,242,0.15)]" : "border-[color:var(--color-border)] bg-white hover:border-[color:var(--color-primary)] hover:bg-[color:var(--color-bg-strip)]"}`}
+                          className={`flex h-full items-start gap-3 rounded-2xl border p-3 text-left transition ${selected ? "border-[color:var(--color-primary)] bg-[color:var(--color-bg-blue)] shadow-[0_4px_18px_0_rgba(49,107,242,0.12)]" : "border-[color:var(--color-border)] bg-white hover:border-[color:var(--color-primary)] hover:bg-[color:var(--color-bg-strip)]"}`}
                         >
-                          <div className="flex w-full items-start justify-between gap-2">
-                            <span className={`flex h-10 w-10 items-center justify-center rounded-full ${selected ? "bg-[color:var(--color-primary)] text-white" : "bg-[color:var(--color-bg-blue)] text-[color:var(--color-primary)]"}`}>
-                              <Icon className="h-5 w-5" />
-                            </span>
-                            <span
-                              className={`flex h-6 w-6 items-center justify-center rounded-full border-2 transition ${
-                                selected
-                                  ? "border-[color:var(--color-primary)] bg-[color:var(--color-primary)] text-white"
-                                  : "border-[color:var(--color-border)] bg-white text-transparent"
-                              }`}
-                              aria-hidden
-                            >
-                              <CheckCircle2 className="h-4 w-4" />
-                            </span>
+                          <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${selected ? "bg-[color:var(--color-primary)] text-white" : "bg-[color:var(--color-bg-blue)] text-[color:var(--color-primary)]"}`}>
+                            <Icon className="h-4 w-4" />
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate font-heading text-sm font-semibold text-[color:var(--color-text-title)]">{animation.label}</p>
+                            <div className="mt-1 flex flex-wrap items-center gap-1 text-[11px]">
+                              <span className="rounded-full bg-emerald-50 px-1.5 py-0.5 font-semibold text-emerald-700">+{formatEuro(animation.revenuePerParticipant)}/p</span>
+                              <span className="rounded-full bg-[color:var(--color-bg-grey)] px-1.5 py-0.5 font-semibold text-[color:var(--color-text-muted)]">−{formatEuro(animation.fixedCost)} fixe</span>
+                              {animation.label.toLowerCase().includes("alcool") && (
+                                <span className="rounded-full bg-amber-50 px-1.5 py-0.5 font-semibold text-amber-700">Buvette</span>
+                              )}
+                            </div>
                           </div>
-                          <p className="font-heading text-base font-semibold text-[color:var(--color-text-title)]">{animation.label}</p>
-                          <div className="mt-auto flex w-full flex-wrap items-center gap-1.5 text-xs">
-                            <span className="rounded-full bg-emerald-50 px-2 py-0.5 font-semibold text-emerald-700">
-                              +{formatEuro(animation.revenuePerParticipant)}/pers.
-                            </span>
-                            <span className="rounded-full bg-[color:var(--color-bg-grey)] px-2 py-0.5 font-semibold text-[color:var(--color-text-muted)]">
-                              −{formatEuro(animation.fixedCost)} fixe
-                            </span>
-                            {animation.label.toLowerCase().includes("alcool") && (
-                              <span className="rounded-full bg-amber-50 px-2 py-0.5 font-semibold text-amber-700">
-                                Buvette
-                              </span>
-                            )}
-                          </div>
+                          <span
+                            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition ${
+                              selected
+                                ? "border-[color:var(--color-primary)] bg-[color:var(--color-primary)] text-white"
+                                : "border-[color:var(--color-border)] bg-white text-transparent"
+                            }`}
+                            aria-hidden
+                          >
+                            <CheckCircle2 className="h-3 w-3" />
+                          </span>
                         </button>
                       );
                     })}
@@ -678,7 +746,9 @@ export default function OneDayEventPlanner() {
                     {input.selectedAnimations.length} animation{input.selectedAnimations.length > 1 ? "s" : ""} sélectionnée{input.selectedAnimations.length > 1 ? "s" : ""}
                   </p>
                 </div>
+              </div>
 
+              <div className="lg:sticky lg:top-24 lg:self-start">
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 font-heading text-[color:var(--color-text-title)]">
@@ -687,11 +757,14 @@ export default function OneDayEventPlanner() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className={`rounded-2xl border p-4 ${statusClasses(plan.budgetStatus)}`}>
-                      <p className="text-sm font-medium">Argent restant estimé</p>
+                      <p className="text-sm font-medium">Bénéfices estimés</p>
                       <p className="font-heading text-3xl font-bold">{formatEuro(plan.net)}</p>
+                      <p className="mt-1 text-xs opacity-80">Revenus − dépenses, hors budget de départ.</p>
                     </div>
                     <p className="text-sm text-[color:var(--color-text-subtitle)]">
-                      Il faut environ <strong>{plan.minimumParticipants} participants</strong> pour ne pas perdre d&apos;argent. Vous pourrez ajuster ce nombre après génération.
+                      {plan.minimumParticipants === 0
+                        ? "Pas de seuil minimum : vos revenus fixes (sponsors, emplacements...) couvrent déjà les coûts fixes."
+                        : <>Il faut environ <strong>{plan.minimumParticipants} participants</strong> pour ne pas perdre d&apos;argent.</>}
                     </p>
                     {animationRows.length > 0 && (
                       <div className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-strip)] p-3 text-sm">
@@ -699,8 +772,8 @@ export default function OneDayEventPlanner() {
                         <div className="mt-2 space-y-2">
                           {animationRows.map((row) => (
                             <div key={row.label} className="flex items-center justify-between gap-2 border-t border-[color:var(--color-border)] pt-2 first:border-t-0 first:pt-0">
-                              <span>{row.label}</span>
-                              <span className="text-right text-[color:var(--color-text-muted)]">{formatEuro(row.cost)} dép. | {formatEuro(row.revenue)} rec.</span>
+                              <span className="truncate">{row.label}</span>
+                              <span className="whitespace-nowrap text-right text-[color:var(--color-text-muted)]">{formatEuro(row.cost)} dép. | {formatEuro(row.revenue)} rec.</span>
                             </div>
                           ))}
                         </div>
@@ -741,17 +814,19 @@ export default function OneDayEventPlanner() {
 
               <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
                 <Card>
-                  <CardHeader><CardTitle className="text-sm font-medium text-[color:var(--color-text-muted)]">Argent restant estimé</CardTitle></CardHeader>
+                  <CardHeader><CardTitle className="text-sm font-medium text-[color:var(--color-text-muted)]">Bénéfices estimés</CardTitle></CardHeader>
                   <CardContent>
                     <p className={`font-heading text-4xl font-bold ${plan.net >= 0 ? "text-emerald-700" : "text-red-700"}`}>{formatEuro(plan.net)}</p>
-                    <p className="mt-2 text-sm text-[color:var(--color-text-muted)]">Budget de départ inclus</p>
+                    <p className="mt-2 text-sm text-[color:var(--color-text-muted)]">Trésorerie après : {formatEuro(plan.cashAfter)}</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardHeader><CardTitle className="text-sm font-medium text-[color:var(--color-text-muted)]">Participants minimum sans perte</CardTitle></CardHeader>
                   <CardContent>
                     <p className="font-heading text-4xl font-bold text-[color:var(--color-primary)]">{plan.minimumParticipants}</p>
-                    <p className="mt-2 text-sm text-[color:var(--color-text-muted)]">objectif pour finir à 0 € ou plus</p>
+                    <p className="mt-2 text-sm text-[color:var(--color-text-muted)]">
+                      {plan.minimumParticipants === 0 ? "déjà couvert par les revenus fixes" : "objectif pour finir à 0 € ou plus"}
+                    </p>
                   </CardContent>
                 </Card>
                 <Card>
