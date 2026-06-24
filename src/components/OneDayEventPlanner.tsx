@@ -37,6 +37,7 @@ import type { LucideIcon } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AssoConnectPromoStrip } from "@/components/AssoConnectPromo";
 import {
   ChartContainer,
   ChartTooltip,
@@ -354,6 +355,7 @@ export default function OneDayEventPlanner() {
   const [copied, setCopied] = useState(false);
   const [copiedMessage, setCopiedMessage] = useState<string | null>(null);
   const [shareUrl, setShareUrl] = useState("");
+  const [resultTab, setResultTab] = useState<"budget" | "logistique" | "com">("budget");
   const confettiFired = useRef(false);
 
   useEffect(() => {
@@ -589,6 +591,10 @@ export default function OneDayEventPlanner() {
                   <span>Date exacte</span>
                   <input type="date" className={inputClass} value={input.date} onChange={(event) => updateInput("date", event.target.value)} />
                 </label>
+                <label className={labelClass}>
+                  <span>Bénévoles disponibles</span>
+                  <input type="number" min={1} className={inputClass} value={input.availableVolunteers} onChange={(event) => updateInput("availableVolunteers", Math.max(1, Number(event.target.value)))} />
+                </label>
                 <Button className="w-full" onClick={() => setStep(1)}>Continuer vers le budget</Button>
               </div>
 
@@ -628,7 +634,10 @@ export default function OneDayEventPlanner() {
             >
               <div className="space-y-5">
                 <div className="rounded-2xl border border-[color:var(--color-border)] bg-white p-6 shadow-sm">
-                  <h2 className="mb-5 font-heading text-xl font-semibold text-[color:var(--color-text-title)]">2. Budget et ressources</h2>
+                  <div className="mb-5 flex items-center gap-2">
+                    <span className="text-2xl">💼</span>
+                    <h2 className="font-heading text-xl font-semibold text-[color:var(--color-text-title)]">Budget</h2>
+                  </div>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <label className={labelClass}>
                       <span>Budget de départ</span>
@@ -637,47 +646,18 @@ export default function OneDayEventPlanner() {
                         <span className="absolute right-3 top-3 text-[color:var(--color-text-muted)]">€</span>
                       </div>
                     </label>
-                    <label className={labelClass}>
-                      <span>Participants espérés</span>
-                      <input type="number" className={inputClass} value={input.expectedParticipants} onChange={(event) => updateInput("expectedParticipants", Number(event.target.value))} />
-                    </label>
-                  </div>
-
-                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                    <button type="button" onClick={() => updateInput("isFree", true)} className={`rounded-[50px] border px-4 py-2.5 text-center text-sm font-medium transition ${input.isFree ? "border-[color:var(--color-primary)] bg-[color:var(--color-primary)] text-white" : "border-[color:var(--color-border)] bg-white text-[color:var(--color-text-subtitle)]"}`}>Entrée gratuite</button>
-                    <button type="button" onClick={() => updateInput("isFree", false)} className={`rounded-[50px] border px-4 py-2.5 text-center text-sm font-medium transition ${!input.isFree ? "border-[color:var(--color-primary)] bg-[color:var(--color-primary)] text-white" : "border-[color:var(--color-border)] bg-white text-[color:var(--color-text-subtitle)]"}`}>Entrée payante</button>
-                  </div>
-
-                  <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                    {!input.isFree && (
-                      <label className={labelClass}>
-                        <span>Prix d&apos;entrée moyen</span>
-                        <div className="relative">
-                          <input type="number" className={`${inputClass} pr-10`} value={input.ticketPrice} onChange={(event) => updateInput("ticketPrice", Number(event.target.value))} />
-                          <span className="absolute right-3 top-3 text-[color:var(--color-text-muted)]">€</span>
-                        </div>
-                      </label>
-                    )}
-                    <label className={labelClass}>
-                      <span>Bénévoles disponibles</span>
-                      <input type="number" className={inputClass} value={input.availableVolunteers} onChange={(event) => updateInput("availableVolunteers", Number(event.target.value))} />
-                    </label>
-                  </div>
-
-                  <div className="mt-4 space-y-3">
-                    <button
-                      type="button"
-                      onClick={() => updateInput("hasSponsors", !input.hasSponsors)}
-                      className={`flex w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left text-sm font-medium transition ${input.hasSponsors ? "border-[color:var(--color-primary)] bg-[color:var(--color-bg-blue)] text-[color:var(--color-primary)]" : "border-[color:var(--color-border)] bg-white text-[color:var(--color-text-subtitle)]"}`}
-                    >
-                      <span>Sponsors ou subvention prévue</span>
-                      <span className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition ${input.hasSponsors ? "bg-[color:var(--color-primary)]" : "bg-[color:var(--color-border)]"}`}>
-                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${input.hasSponsors ? "translate-x-6" : "translate-x-1"}`} />
-                      </span>
-                    </button>
-                    {input.hasSponsors && (
-                      <label className={labelClass}>
-                        <span>Montant prévu</span>
+                    <div className="space-y-2">
+                      <button
+                        type="button"
+                        onClick={() => updateInput("hasSponsors", !input.hasSponsors)}
+                        className={`flex w-full items-center justify-between gap-3 rounded-xl border px-3 py-2.5 text-left text-sm font-medium transition ${input.hasSponsors ? "border-[color:var(--color-primary)] bg-[color:var(--color-bg-blue)] text-[color:var(--color-primary)]" : "border-[color:var(--color-border)] bg-white text-[color:var(--color-text-subtitle)]"}`}
+                      >
+                        <span>Sponsors / subvention</span>
+                        <span className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition ${input.hasSponsors ? "bg-[color:var(--color-primary)]" : "bg-[color:var(--color-border)]"}`}>
+                          <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition ${input.hasSponsors ? "translate-x-5" : "translate-x-1"}`} />
+                        </span>
+                      </button>
+                      {input.hasSponsors && (
                         <div className="relative">
                           <input
                             type="number"
@@ -690,19 +670,42 @@ export default function OneDayEventPlanner() {
                           />
                           <span className="absolute right-3 top-3 text-[color:var(--color-text-muted)]">€</span>
                         </div>
-                        <span className="block text-xs font-normal text-[color:var(--color-text-muted)]">Cumul de toutes vos subventions et sponsors confirmés ou attendus.</span>
-                      </label>
-                    )}
+                      )}
+                    </div>
                   </div>
+                </div>
 
-                  <div className="mt-5 flex gap-2">
-                    <Button variant="secondary" onClick={() => setStep(0)}>Retour</Button>
-                    <Button className="flex-1" onClick={() => setStep(2)}>Continuer vers les animations</Button>
+                <div className="rounded-2xl border border-[color:var(--color-border)] bg-white p-6 shadow-sm">
+                  <div className="mb-5 flex items-center gap-2">
+                    <span className="text-2xl">🎟️</span>
+                    <h2 className="font-heading text-xl font-semibold text-[color:var(--color-text-title)]">Billetterie</h2>
                   </div>
+                  <label className={labelClass}>
+                    <span>Participants espérés</span>
+                    <input type="number" className={inputClass} value={input.expectedParticipants} onChange={(event) => updateInput("expectedParticipants", Number(event.target.value))} />
+                  </label>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    <button type="button" onClick={() => updateInput("isFree", true)} className={`rounded-[50px] border px-4 py-2.5 text-center text-sm font-medium transition ${input.isFree ? "border-[color:var(--color-primary)] bg-[color:var(--color-primary)] text-white" : "border-[color:var(--color-border)] bg-white text-[color:var(--color-text-subtitle)]"}`}>Entrée gratuite</button>
+                    <button type="button" onClick={() => updateInput("isFree", false)} className={`rounded-[50px] border px-4 py-2.5 text-center text-sm font-medium transition ${!input.isFree ? "border-[color:var(--color-primary)] bg-[color:var(--color-primary)] text-white" : "border-[color:var(--color-border)] bg-white text-[color:var(--color-text-subtitle)]"}`}>Entrée payante</button>
+                  </div>
+                  {!input.isFree && (
+                    <label className={`${labelClass} mt-4`}>
+                      <span>Prix d&apos;entrée moyen</span>
+                      <div className="relative">
+                        <input type="number" className={`${inputClass} pr-10`} value={input.ticketPrice} onChange={(event) => updateInput("ticketPrice", Number(event.target.value))} />
+                        <span className="absolute right-3 top-3 text-[color:var(--color-text-muted)]">€</span>
+                      </div>
+                    </label>
+                  )}
+                </div>
+
+                <div className="flex gap-2">
+                  <Button variant="secondary" onClick={() => setStep(0)}>Retour</Button>
+                  <Button className="flex-1" onClick={() => setStep(2)}>Continuer vers les animations</Button>
                 </div>
               </div>
 
-              <div className="lg:sticky lg:top-24 lg:self-start">
+              <div className="space-y-5 lg:sticky lg:top-24 lg:self-start">
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 font-heading text-[color:var(--color-text-title)]">
@@ -722,6 +725,11 @@ export default function OneDayEventPlanner() {
                     </p>
                   </CardContent>
                 </Card>
+
+                <AssoConnectPromoStrip
+                  showBilletterie={!input.isFree}
+                  showTapToPay={input.hasSponsors || !input.isFree || input.expectedParticipants >= 50}
+                />
               </div>
             </motion.section>
           )}
@@ -858,6 +866,39 @@ export default function OneDayEventPlanner() {
                 </div>
               </div>
 
+              {alcoholSelected && (
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-900">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="mt-0.5 h-5 w-5" />
+                    <div>
+                      <p className="font-heading font-semibold">Autorisation buvette temporaire à vérifier</p>
+                      <p className="mt-1 text-sm">Si vous servez de l&apos;alcool, pensez à demander l&apos;autorisation en mairie et à vérifier les règles applicables à votre événement.</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="sticky top-2 z-10 -mx-2 flex flex-wrap gap-2 rounded-full border border-[color:var(--color-border)] bg-white/95 p-1.5 shadow-sm backdrop-blur">
+                {([
+                  { id: "budget" as const, label: "💰 Budget" },
+                  { id: "logistique" as const, label: "📋 Logistique" },
+                  { id: "com" as const, label: "📣 Communication" },
+                ]).map((tab) => {
+                  const active = resultTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setResultTab(tab.id)}
+                      className={`flex-1 rounded-full px-4 py-2 text-sm font-medium transition ${active ? "bg-[color:var(--color-primary)] text-white shadow-sm" : "text-[color:var(--color-text-subtitle)] hover:bg-[color:var(--color-bg-blue)] hover:text-[color:var(--color-primary)]"}`}
+                    >
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {resultTab === "budget" && (<>
               <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
                 <Card>
                   <CardHeader><CardTitle className="text-sm font-medium text-[color:var(--color-text-muted)]">Bénéfices estimés</CardTitle></CardHeader>
@@ -893,18 +934,6 @@ export default function OneDayEventPlanner() {
                 </CardContent>
               </Card>
 
-              {alcoholSelected && (
-                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-900">
-                  <div className="flex items-start gap-3">
-                    <AlertTriangle className="mt-0.5 h-5 w-5" />
-                    <div>
-                      <p className="font-heading font-semibold">Autorisation buvette temporaire à vérifier</p>
-                      <p className="mt-1 text-sm">Si vous servez de l&apos;alcool, pensez à demander l&apos;autorisation en mairie et à vérifier les règles applicables à votre événement.</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
                 <div className="rounded-2xl border border-[color:var(--color-border)] bg-white p-5 shadow-sm">
                   <div className="mb-4 flex items-center gap-2 font-heading text-lg font-semibold text-[color:var(--color-text-title)]"><SlidersHorizontal className="h-5 w-5 text-[color:var(--color-primary)]" /> Ajuster les participants</div>
@@ -918,30 +947,44 @@ export default function OneDayEventPlanner() {
                 </div>
               </div>
 
-              <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))" }}>
-                <Card>
-                  <CardHeader><CardTitle className="flex items-center gap-2 font-heading text-[color:var(--color-text-title)]"><Euro className="h-5 w-5 text-[color:var(--color-primary)]" /> Budget simplifié</CardTitle></CardHeader>
-                  <CardContent>
-                    <ChartContainer config={chartConfig} className="h-72 w-full">
-                      <BarChart data={chartData} margin={{ top: 20, right: 20, left: 0, bottom: 20 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#d0d0d7" />
-                        <XAxis dataKey="name" tick={{ fontSize: 12, fill: "#73737c" }} />
-                        <YAxis tick={{ fontSize: 12, fill: "#73737c" }} />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Bar dataKey="amount" fill="var(--color-amount)" radius={[8, 8, 0, 0]} />
-                      </BarChart>
-                    </ChartContainer>
-                    <div className="mt-3 grid gap-2 text-sm" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))" }}>
-                      <span className="text-[color:var(--color-text-subtitle)]">Entrées: <strong className="text-[color:var(--color-text-title)]">{formatEuro(plan.ticketRevenue)}</strong></span>
-                      <span className="text-[color:var(--color-text-subtitle)]">Animations: <strong className="text-[color:var(--color-text-title)]">{formatEuro(plan.animationRevenue)}</strong></span>
-                      <span className="text-[color:var(--color-text-subtitle)]">Sponsors: <strong className="text-[color:var(--color-text-title)]">{formatEuro(plan.sponsorRevenue)}</strong></span>
-                      <span className="text-[color:var(--color-text-subtitle)]">Dépenses: <strong className="text-[color:var(--color-text-title)]">{formatEuro(plan.totalCosts)}</strong></span>
-                    </div>
-                  </CardContent>
-                </Card>
+              <Card>
+                <CardHeader><CardTitle className="flex items-center gap-2 font-heading text-[color:var(--color-text-title)]"><Euro className="h-5 w-5 text-[color:var(--color-primary)]" /> Budget simplifié</CardTitle></CardHeader>
+                <CardContent>
+                  <ChartContainer config={chartConfig} className="h-72 w-full">
+                    <BarChart data={chartData} margin={{ top: 20, right: 20, left: 0, bottom: 20 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#d0d0d7" />
+                      <XAxis dataKey="name" tick={{ fontSize: 12, fill: "#73737c" }} />
+                      <YAxis tick={{ fontSize: 12, fill: "#73737c" }} />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Bar dataKey="amount" fill="var(--color-amount)" radius={[8, 8, 0, 0]} />
+                    </BarChart>
+                  </ChartContainer>
+                  <div className="mt-3 grid gap-2 text-sm" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))" }}>
+                    <span className="text-[color:var(--color-text-subtitle)]">Entrées: <strong className="text-[color:var(--color-text-title)]">{formatEuro(plan.ticketRevenue)}</strong></span>
+                    <span className="text-[color:var(--color-text-subtitle)]">Animations: <strong className="text-[color:var(--color-text-title)]">{formatEuro(plan.animationRevenue)}</strong></span>
+                    <span className="text-[color:var(--color-text-subtitle)]">Sponsors: <strong className="text-[color:var(--color-text-title)]">{formatEuro(plan.sponsorRevenue)}</strong></span>
+                    <span className="text-[color:var(--color-text-subtitle)]">Dépenses: <strong className="text-[color:var(--color-text-title)]">{formatEuro(plan.totalCosts)}</strong></span>
+                  </div>
+                </CardContent>
+              </Card>
 
-                <Card>
-                  <CardHeader><CardTitle className="flex items-center gap-2 font-heading text-[color:var(--color-text-title)]"><Users className="h-5 w-5 text-[color:var(--color-primary)]" /> Staffing recommandé</CardTitle></CardHeader>
+              <Card>
+                <CardHeader><CardTitle className="font-heading text-[color:var(--color-text-title)]">Scénarios financiers</CardTitle></CardHeader>
+                <CardContent className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
+                  {scenarios.map((scenario) => (
+                    <div key={scenario.label} className={`rounded-2xl border p-4 ${scenario.net >= 0 ? "bg-emerald-50 border-emerald-200" : "bg-red-50 border-red-200"}`}>
+                      <p className="font-heading font-semibold text-[color:var(--color-text-title)]">{scenario.label}</p>
+                      <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{scenario.participants} participants</p>
+                      <p className={`mt-2 font-heading text-2xl font-bold ${scenario.net >= 0 ? "text-emerald-700" : "text-red-700"}`}>{formatEuro(scenario.net)}</p>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+              </>)}
+
+              {resultTab === "logistique" && (<>
+              <Card>
+                <CardHeader><CardTitle className="flex items-center gap-2 font-heading text-[color:var(--color-text-title)]"><Users className="h-5 w-5 text-[color:var(--color-primary)]" /> Staffing recommandé</CardTitle></CardHeader>
                   <CardContent className="space-y-3">
                     {(() => {
                       const hasBuvette = input.selectedAnimations.some((item) => item.includes("Buvette") || item === "Repas");
@@ -983,7 +1026,6 @@ export default function OneDayEventPlanner() {
                     <p className="text-xs text-[color:var(--color-text-muted)]">Répartition sur {adjustedVolunteers} bénévole{adjustedVolunteers > 1 ? "s" : ""} (idéal : {plan.recommendedVolunteers}).</p>
                   </CardContent>
                 </Card>
-              </div>
 
               <Card>
                 <CardHeader><CardTitle className="flex items-center gap-2 font-heading text-[color:var(--color-text-title)]"><ShoppingCart className="h-5 w-5 text-[color:var(--color-primary)]" /> Liste de courses estimée</CardTitle></CardHeader>
@@ -1007,19 +1049,6 @@ export default function OneDayEventPlanner() {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader><CardTitle className="font-heading text-[color:var(--color-text-title)]">Scénarios financiers</CardTitle></CardHeader>
-                <CardContent className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
-                  {scenarios.map((scenario) => (
-                    <div key={scenario.label} className={`rounded-2xl border p-4 ${scenario.net >= 0 ? "bg-emerald-50 border-emerald-200" : "bg-red-50 border-red-200"}`}>
-                      <p className="font-heading font-semibold text-[color:var(--color-text-title)]">{scenario.label}</p>
-                      <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{scenario.participants} participants</p>
-                      <p className={`mt-2 font-heading text-2xl font-bold ${scenario.net >= 0 ? "text-emerald-700" : "text-red-700"}`}>{formatEuro(scenario.net)}</p>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-
               <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))" }}>
                 <Card>
                   <CardHeader><CardTitle className="flex items-center gap-2 font-heading text-[color:var(--color-text-title)]"><CalendarDays className="h-5 w-5 text-[color:var(--color-primary)]" /> Rétroplanning</CardTitle></CardHeader>
@@ -1034,21 +1063,22 @@ export default function OneDayEventPlanner() {
                   </CardContent>
                 </Card>
 
-                <div className="space-y-4">
-                  <Card>
-                    <CardHeader><CardTitle className="flex items-center gap-2 font-heading text-[color:var(--color-text-title)]"><CheckCircle2 className="h-5 w-5 text-[color:var(--color-primary)]" /> Checklist administrative</CardTitle></CardHeader>
-                    <CardContent className="space-y-2">
-                      {[...config.admin, ...(alcoholSelected ? ["Demander l'autorisation de buvette temporaire en mairie"] : [])].map((item) => <div key={item} className="flex gap-2 text-sm text-[color:var(--color-text-subtitle)]"><CheckCircle2 className="mt-0.5 h-4 w-4 text-[color:var(--color-primary)]" /><span>{item}</span></div>)}
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardHeader><CardTitle className="flex items-center gap-2 font-heading text-[color:var(--color-text-title)]"><Sparkles className="h-5 w-5 text-[color:var(--color-primary)]" /> Animations retenues</CardTitle></CardHeader>
-                    <CardContent className="flex flex-wrap gap-2">
-                      {input.selectedAnimations.map((item) => <span key={item} className="rounded-full border border-[color:var(--color-primary)] bg-[color:var(--color-bg-blue)] px-3 py-1 text-sm font-medium text-[color:var(--color-primary)]">{item}</span>)}
-                    </CardContent>
-                  </Card>
-                </div>
+                <Card>
+                  <CardHeader><CardTitle className="flex items-center gap-2 font-heading text-[color:var(--color-text-title)]"><CheckCircle2 className="h-5 w-5 text-[color:var(--color-primary)]" /> Checklist administrative</CardTitle></CardHeader>
+                  <CardContent className="space-y-2">
+                    {[...config.admin, ...(alcoholSelected ? ["Demander l'autorisation de buvette temporaire en mairie"] : [])].map((item) => <div key={item} className="flex gap-2 text-sm text-[color:var(--color-text-subtitle)]"><CheckCircle2 className="mt-0.5 h-4 w-4 text-[color:var(--color-primary)]" /><span>{item}</span></div>)}
+                  </CardContent>
+                </Card>
               </div>
+              </>)}
+
+              {resultTab === "com" && (<>
+              <Card>
+                <CardHeader><CardTitle className="flex items-center gap-2 font-heading text-[color:var(--color-text-title)]"><Sparkles className="h-5 w-5 text-[color:var(--color-primary)]" /> Animations retenues</CardTitle></CardHeader>
+                <CardContent className="flex flex-wrap gap-2">
+                  {input.selectedAnimations.map((item) => <span key={item} className="rounded-full border border-[color:var(--color-primary)] bg-[color:var(--color-bg-blue)] px-3 py-1 text-sm font-medium text-[color:var(--color-primary)]">{item}</span>)}
+                </CardContent>
+              </Card>
 
               <Card>
                 <CardHeader>
@@ -1079,6 +1109,7 @@ export default function OneDayEventPlanner() {
                   {config.tips.map((tip) => <div key={tip} className="flex gap-2 rounded-2xl bg-white p-3 text-sm font-medium text-[color:var(--color-text-subtitle)] shadow-sm"><CheckCircle2 className="mt-0.5 h-4 w-4 text-[color:var(--color-primary)]" /><span>{tip}</span></div>)}
                 </div>
               </div>
+              </>)}
             </motion.section>
           )}
         </AnimatePresence>
