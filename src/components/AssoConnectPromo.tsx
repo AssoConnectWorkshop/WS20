@@ -78,9 +78,10 @@ type PromoStripProps = {
   showBilletterie: boolean;
   showTapToPay: boolean;
   showGlobal?: boolean;
+  layout?: "stack" | "row";
 };
 
-export function AssoConnectPromoStrip({ showBilletterie, showTapToPay, showGlobal }: PromoStripProps) {
+export function AssoConnectPromoStrip({ showBilletterie, showTapToPay, showGlobal, layout = "stack" }: PromoStripProps) {
   const cards: PromoVariant[] = [];
   if (showBilletterie) cards.push("billetterie");
   if (showTapToPay) cards.push("tap-to-pay");
@@ -91,9 +92,11 @@ export function AssoConnectPromoStrip({ showBilletterie, showTapToPay, showGloba
       <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--color-primary)]">
         <Sparkles className="h-3.5 w-3.5" /> Boostez votre événement
       </div>
-      {cards.map((variant) => (
-        <AssoConnectPromoCard key={variant} variant={variant} />
-      ))}
+      <div className={layout === "row" ? "grid gap-3 sm:grid-cols-2 lg:grid-cols-3" : "space-y-3"}>
+        {cards.map((variant) => (
+          <AssoConnectPromoCard key={variant} variant={variant} />
+        ))}
+      </div>
     </div>
   );
 }
