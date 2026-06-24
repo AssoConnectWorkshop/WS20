@@ -1,43 +1,95 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: #fdfbf7;
-  --color-foreground: #1f2233;
+  --color-background: #ffffff;
+  --color-foreground: #3c3c47;
   --color-card: #ffffff;
-  --color-card-foreground: #1f2233;
-  --color-muted: #f3eee6;
-  --color-muted-foreground: #6b6f80;
-  --color-border: #e9e3d8;
-  --color-input: #e9e3d8;
-  --color-ring: #ff5b5c;
+  --color-card-foreground: #3c3c47;
 
-  --color-primary: #ff5b5c;
+  --color-primary: #316bf2;
+  --color-primary-hover: #0040d7;
+  --color-primary-20: rgba(49, 107, 242, 0.2);
   --color-primary-foreground: #ffffff;
-  --color-primary-soft: #fff1f0;
-  --color-primary-dark: #e23b3d;
 
-  --color-accent: #2a2d4a;
-  --color-accent-foreground: #ffffff;
-  --color-accent-soft: #eef0fb;
+  --color-turquoise: #87dfd5;
+  --color-turquoise-on-dark: #6f97f5;
 
+  --color-yellow: #f6c131;
+  --color-yellow-hover: #f9ac29;
+
+  --color-text-title: #3c3c47;
+  --color-text-subtitle: #56565d;
+  --color-text-muted: #73737c;
+  --color-text-light: #ffffff;
+
+  --color-bg-strip: #f9fbff;
+  --color-bg-blue: #e6edfd;
+  --color-bg-grey: #f6f6f6;
+
+  --color-border: #d0d0d7;
+  --color-input: #d0d0d7;
+  --color-ring: #316bf2;
+  --color-muted: #f6f6f6;
+  --color-muted-foreground: #73737c;
+
+  --color-error: #ff3b30;
   --color-success: #10b981;
-  --color-success-soft: #ecfdf5;
   --color-warning: #f59e0b;
-  --color-warning-soft: #fff7e6;
-  --color-danger: #ef4444;
-  --color-danger-soft: #fef2f2;
 
-  --color-chart-1: #ff5b5c;
-  --color-chart-2: #2a2d4a;
-  --color-chart-3: #f59e0b;
+  --color-chart-1: #316bf2;
+  --color-chart-2: #87dfd5;
+  --color-chart-3: #f6c131;
   --color-chart-4: #10b981;
 
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --radius-xs: 2px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-3xl: 50px;
+
+  --shadow-card: 0 10px 50px 0 rgba(49, 107, 242, 0.2);
+  --shadow-card-dark: 0 10px 50px 0 rgba(0, 9, 44, 0.2);
+  --shadow-card-white: 0 10px 50px 0 rgba(255, 255, 255, 0.15);
+
+  --font-sans: var(--font-roboto), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-heading: var(--font-poppins), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-hand: var(--font-caveat), cursive;
+}
+
+html {
+  font-size: 18px;
 }
 
 body {
-  background: var(--color-background);
-  color: var(--color-foreground);
+  background:
+    linear-gradient(132.82deg, rgba(49, 107, 242, 0.07) 0%, #ffffff 49.5%, rgba(49, 107, 242, 0.07) 100%) fixed,
+    #ffffff;
+  color: var(--color-text-title);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  color: var(--color-text-title);
+  letter-spacing: 0.03px;
+}
+
+.font-hand {
+  font-family: var(--font-hand);
+}
+
+.highlight {
+  position: relative;
+  display: inline-block;
+  background-image: linear-gradient(transparent 65%, var(--color-turquoise) 65%, var(--color-turquoise) 90%, transparent 90%);
+  padding: 0 0.1em;
+}
+
+.highlight-on-dark {
+  background-image: linear-gradient(transparent 65%, var(--color-turquoise-on-dark) 65%, var(--color-turquoise-on-dark) 90%, transparent 90%);
 }

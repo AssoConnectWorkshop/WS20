@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
-type Variant = "primary" | "outline" | "ghost" | "subtle";
+type Variant = "primary" | "secondary" | "ghost" | "white" | "yellow";
 type Size = "sm" | "md" | "lg";
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -11,19 +11,21 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const VARIANTS: Record<Variant, string> = {
   primary:
-    "bg-[color:var(--color-primary)] text-white hover:bg-[color:var(--color-primary-dark)] shadow-sm",
-  outline:
-    "border border-[color:var(--color-border)] bg-white text-[color:var(--color-foreground)] hover:bg-[color:var(--color-muted)]",
+    "bg-[color:var(--color-primary)] text-white hover:bg-[color:var(--color-primary-hover)] shadow-sm",
+  secondary:
+    "bg-transparent text-[color:var(--color-primary)] border border-[color:var(--color-primary)] hover:bg-[color:var(--color-primary-20)]",
   ghost:
-    "text-[color:var(--color-foreground)] hover:bg-[color:var(--color-muted)]",
-  subtle:
-    "bg-[color:var(--color-primary-soft)] text-[color:var(--color-primary-dark)] hover:bg-[color:var(--color-primary-soft)]/80",
+    "bg-transparent text-[color:var(--color-primary)] hover:bg-[color:var(--color-primary-20)]",
+  white:
+    "bg-white text-[color:var(--color-text-title)] border border-[color:var(--color-border)] hover:bg-[color:var(--color-bg-grey)]",
+  yellow:
+    "bg-[color:var(--color-yellow)] text-[color:var(--color-text-title)] hover:bg-[color:var(--color-yellow-hover)] shadow-sm",
 };
 
 const SIZES: Record<Size, string> = {
-  sm: "h-9 px-3 text-sm",
-  md: "h-10 px-4 text-sm",
-  lg: "h-12 px-5 text-base",
+  sm: "h-10 px-4 text-sm",
+  md: "h-12 px-6 text-[0.95rem]",
+  lg: "h-14 px-8 text-base",
 };
 
 export function Button({
@@ -34,7 +36,7 @@ export function Button({
   ...rest
 }: ButtonProps) {
   const base =
-    "inline-flex items-center justify-center gap-2 rounded-full font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--color-background)] disabled:opacity-50 disabled:pointer-events-none cursor-pointer";
+    "inline-flex items-center justify-center gap-2 rounded-[50px] font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-ring)] focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer";
   return (
     <button className={`${base} ${VARIANTS[variant]} ${SIZES[size]} ${className}`} {...rest}>
       {children}
