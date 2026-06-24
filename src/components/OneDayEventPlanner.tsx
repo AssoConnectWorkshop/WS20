@@ -647,12 +647,13 @@ export default function OneDayEventPlanner() {
                       </div>
                     </label>
                     <div className="space-y-2">
+                      <span className="block text-sm font-medium text-[color:var(--color-text-title)]">Sponsors / subvention</span>
                       <button
                         type="button"
                         onClick={() => updateInput("hasSponsors", !input.hasSponsors)}
-                        className={`flex w-full items-center justify-between gap-3 rounded-xl border px-3 py-2.5 text-left text-sm font-medium transition ${input.hasSponsors ? "border-[color:var(--color-primary)] bg-[color:var(--color-bg-blue)] text-[color:var(--color-primary)]" : "border-[color:var(--color-border)] bg-white text-[color:var(--color-text-subtitle)]"}`}
+                        className={`flex w-full items-center justify-between gap-3 rounded-[12px] border px-4 py-2.5 text-left text-sm font-medium transition ${input.hasSponsors ? "border-[color:var(--color-primary)] bg-[color:var(--color-bg-blue)] text-[color:var(--color-primary)]" : "border-[color:var(--color-border)] bg-white text-[color:var(--color-text-subtitle)]"}`}
                       >
-                        <span>Sponsors / subvention</span>
+                        <span>{input.hasSponsors ? "Oui, j'en ai" : "Pas pour cet événement"}</span>
                         <span className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition ${input.hasSponsors ? "bg-[color:var(--color-primary)]" : "bg-[color:var(--color-border)]"}`}>
                           <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition ${input.hasSponsors ? "translate-x-5" : "translate-x-1"}`} />
                         </span>
@@ -666,7 +667,7 @@ export default function OneDayEventPlanner() {
                             className={`${inputClass} pr-10`}
                             value={input.sponsorAmount}
                             onChange={(event) => updateInput("sponsorAmount", Math.max(0, Number(event.target.value)))}
-                            placeholder="Ex: 350"
+                            placeholder="Montant attendu, ex: 350"
                           />
                           <span className="absolute right-3 top-3 text-[color:var(--color-text-muted)]">€</span>
                         </div>
@@ -898,6 +899,8 @@ export default function OneDayEventPlanner() {
                 })}
               </div>
 
+              <AssoConnectPromoStrip showBilletterie showTapToPay showGlobal />
+
               {resultTab === "budget" && (<>
               <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
                 <Card>
@@ -1107,6 +1110,9 @@ export default function OneDayEventPlanner() {
                 <p className="mt-2 text-sm text-[color:var(--color-text-subtitle)]">Ces points dépendent du lieu, de la commune et du format exact de l&apos;événement. Ils sont là pour vous aider à poser les bonnes questions sans complexifier le MVP.</p>
                 <div className="mt-4 grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
                   {config.tips.map((tip) => <div key={tip} className="flex gap-2 rounded-2xl bg-white p-3 text-sm font-medium text-[color:var(--color-text-subtitle)] shadow-sm"><CheckCircle2 className="mt-0.5 h-4 w-4 text-[color:var(--color-primary)]" /><span>{tip}</span></div>)}
+                </div>
+                <div className="mt-5">
+                  <AssoConnectPromoStrip showBilletterie showTapToPay showGlobal />
                 </div>
               </div>
               </>)}

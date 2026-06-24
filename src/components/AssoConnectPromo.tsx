@@ -77,12 +77,14 @@ export function AssoConnectPromoCard({ variant }: PromoCardProps) {
 type PromoStripProps = {
   showBilletterie: boolean;
   showTapToPay: boolean;
+  showGlobal?: boolean;
 };
 
-export function AssoConnectPromoStrip({ showBilletterie, showTapToPay }: PromoStripProps) {
+export function AssoConnectPromoStrip({ showBilletterie, showTapToPay, showGlobal }: PromoStripProps) {
   const cards: PromoVariant[] = [];
   if (showBilletterie) cards.push("billetterie");
   if (showTapToPay) cards.push("tap-to-pay");
+  if (showGlobal) cards.push("global");
   if (cards.length === 0) cards.push("global");
   return (
     <div className="space-y-3">
