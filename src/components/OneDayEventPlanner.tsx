@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import confetti from "canvas-confetti";
 import {
@@ -30,6 +31,7 @@ import {
   UserCheck,
   Users,
   UtensilsCrossed,
+  ArrowLeft,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
@@ -526,13 +528,21 @@ export default function OneDayEventPlanner() {
   return (
     <main className="bg-transparent px-4 py-8">
       <section className="mx-auto max-w-[1280px] space-y-5 px-2">
-        <div className="flex flex-wrap items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[color:var(--color-primary)] text-white">
-            <PartyPopper className="h-5 w-5" />
-          </span>
-          <h1 className="font-heading text-xl font-bold text-[color:var(--color-text-title)] sm:text-2xl">
-            Décrivez, on s&apos;occupe du <span className="highlight">reste</span>
-          </h1>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[color:var(--color-primary)] text-white">
+              <PartyPopper className="h-5 w-5" />
+            </span>
+            <h1 className="font-heading text-xl font-bold text-[color:var(--color-text-title)] sm:text-2xl">
+              Décrivez, on s&apos;occupe du <span className="highlight">reste</span>
+            </h1>
+          </div>
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 rounded-full border border-[color:var(--color-border)] bg-white px-3 py-1.5 text-sm font-medium text-[color:var(--color-text-subtitle)] transition hover:border-[color:var(--color-primary)] hover:text-[color:var(--color-primary)]"
+          >
+            <ArrowLeft className="h-4 w-4" /> Accueil
+          </Link>
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -997,6 +1007,19 @@ export default function OneDayEventPlanner() {
                 </CardContent>
               </Card>
 
+              <Card>
+                <CardHeader><CardTitle className="font-heading text-[color:var(--color-text-title)]">Scénarios financiers</CardTitle></CardHeader>
+                <CardContent className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
+                  {scenarios.map((scenario) => (
+                    <div key={scenario.label} className={`rounded-2xl border p-4 ${scenario.net >= 0 ? "bg-emerald-50 border-emerald-200" : "bg-red-50 border-red-200"}`}>
+                      <p className="font-heading font-semibold text-[color:var(--color-text-title)]">{scenario.label}</p>
+                      <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{scenario.participants} participants</p>
+                      <p className={`mt-2 font-heading text-2xl font-bold ${scenario.net >= 0 ? "text-emerald-700" : "text-red-700"}`}>{formatEuro(scenario.net)}</p>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+
               <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))" }}>
                 <Card>
                   <CardHeader><CardTitle className="flex items-center gap-2 font-heading text-[color:var(--color-text-title)]"><CalendarDays className="h-5 w-5 text-[color:var(--color-primary)]" /> Rétroplanning</CardTitle></CardHeader>
@@ -1026,19 +1049,6 @@ export default function OneDayEventPlanner() {
                   </Card>
                 </div>
               </div>
-
-              <Card>
-                <CardHeader><CardTitle className="font-heading text-[color:var(--color-text-title)]">Scénarios financiers</CardTitle></CardHeader>
-                <CardContent className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
-                  {scenarios.map((scenario) => (
-                    <div key={scenario.label} className={`rounded-2xl border p-4 ${scenario.net >= 0 ? "bg-emerald-50 border-emerald-200" : "bg-red-50 border-red-200"}`}>
-                      <p className="font-heading font-semibold text-[color:var(--color-text-title)]">{scenario.label}</p>
-                      <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">{scenario.participants} participants</p>
-                      <p className={`mt-2 font-heading text-2xl font-bold ${scenario.net >= 0 ? "text-emerald-700" : "text-red-700"}`}>{formatEuro(scenario.net)}</p>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
 
               <Card>
                 <CardHeader>
